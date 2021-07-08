@@ -1,11 +1,13 @@
 package com.mycode.tourapptelegrambot.cache;
 
 import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
+import com.mycode.tourapptelegrambot.dto.MessageAndBoolean;
 import com.mycode.tourapptelegrambot.dto.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Order;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +21,19 @@ public class UserOrderCache implements DataCache {
     private Map<Integer, QuestionIdAndNext> questionIdAndNext = new HashMap<>();
     private Map<Integer, CurrentButtonTypeAndMessage> currentButtonTypeAndMessage = new HashMap<>();
     private Map<Integer,Integer> calendarTime=new HashMap<>();
+    private Map<Integer, MessageAndBoolean> lastMessage=new HashMap<>();
 
 
+    @Override
+    public void setLastMessage(int userId,MessageAndBoolean message) {
+        lastMessage.put(userId,message);
+    }
+
+    @Override
+    public MessageAndBoolean getLastMessage(int userId) {
+        MessageAndBoolean message = lastMessage.get(userId);
+        return message;
+    }
 
     @Override
     public void setCalendarTime(int userId,int time) {

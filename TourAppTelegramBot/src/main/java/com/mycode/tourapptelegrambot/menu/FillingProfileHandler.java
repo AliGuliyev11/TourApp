@@ -14,24 +14,19 @@ import com.mycode.tourapptelegrambot.models.QuestionAction;
 import com.mycode.tourapptelegrambot.repositories.OrderRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
-import com.mycode.tourapptelegrambot.utils.CalendarUtil;
-import com.mycode.tourapptelegrambot.utils.Emojis;
-import com.vdurmont.emoji.EmojiParser;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.LocalDate;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.regex.Pattern;
 
 import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.*;
+import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
+import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
+import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.sendEndingMessage;
 
 
 @Slf4j
@@ -39,10 +34,10 @@ import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.*;
 public class FillingProfileHandler implements InputMessageHandler {
 
 
-    private UserOrderCache userOrderCache;
-    QuestionActionRepo questionActionRepo;
-    QuestionRepo questionRepo;
-    OrderRepo orderRepo;
+    private final UserOrderCache userOrderCache;
+    private final QuestionActionRepo questionActionRepo;
+    private final QuestionRepo questionRepo;
+    private final OrderRepo orderRepo;
 
     public FillingProfileHandler(UserOrderCache userDataCache, QuestionActionRepo questionActionRepo,
                                  QuestionRepo questionRepo, OrderRepo orderRepo) {
@@ -133,7 +128,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         field.setAccessible(true);
         Class<?> type = field.getType();
         if (isPrimitive(type)) {
-            Object boxed = null;
+            Object boxed;
             try {
                 boxed = boxPrimitiveClass(type, text.toString());
             } catch (Exception e) {

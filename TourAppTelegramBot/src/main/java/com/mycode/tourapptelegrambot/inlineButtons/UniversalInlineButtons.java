@@ -2,6 +2,7 @@ package com.mycode.tourapptelegrambot.inlineButtons;
 
 import com.mycode.tourapptelegrambot.cache.UserOrderCache;
 import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
+import com.mycode.tourapptelegrambot.dto.MessageAndBoolean;
 import com.mycode.tourapptelegrambot.dto.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Question;
@@ -44,12 +45,12 @@ public class UniversalInlineButtons {
         userOrderCache.setQuestionIdAndNext(userId, QuestionIdAndNext.builder().questionId(questionId).next(next).build());
         userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(questionType)
                 .message(question.getQuestion()).build());
-
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         rowList.add(keyboardButtonsRow1);
 
         inlineKeyboardMarkup.setKeyboard(rowList);
         sendMessage.setReplyMarkup(inlineKeyboardMarkup);
+        userOrderCache.setLastMessage(userId, MessageAndBoolean.builder().sendMessage(sendMessage).send(false).build());
 
         return sendMessage;
     }

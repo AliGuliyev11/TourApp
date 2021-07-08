@@ -22,6 +22,6 @@ public class TourAppController {
     @PostMapping
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return telegramBot.onWebhookUpdateReceived(update);
-//        return new SendMessage(update.getMessage().getChatId(),"Salam");
+//            return new SendMessage(update.getMessage().getChatId(),"Salam");
     }
 }

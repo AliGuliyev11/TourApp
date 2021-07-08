@@ -19,7 +19,10 @@ import com.mycode.tourapptelegrambot.utils.Emojis;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Lazy;
@@ -28,6 +31,8 @@ import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.LeaveChat;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.RestrictChatMember;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatPermissions;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -37,10 +42,19 @@ import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static com.mycode.tourapptelegrambot.bot.botfacace.BotStateContext.isButtonType;
 import static com.mycode.tourapptelegrambot.inlineButtons.AskLanguage.getLanguageButtons;
+import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.*;
+import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
+import static com.mycode.tourapptelegrambot.utils.CalendarUtil.WD;
 
 @Component
 @Slf4j
@@ -91,7 +105,6 @@ public class TelegramFacade {
             for (var item : processCallbackQuery(callbackQuery)) {
                 telegramBot.Execute(item);
             }
-//            return processCallbackQuery(callbackQuery);
         }
 
         Message message = update.getMessage();
@@ -121,20 +134,28 @@ public class TelegramFacade {
                 userOrderCache.saveUserOrder(userId, Order.builder().userId(userId).chatId(chatId).build());
                 ChatPermissions chatPermissions = new ChatPermissions();
                 chatPermissions.setCanSendMessages(false);
-                SetChatPermissions setChatPermissions = new SetChatPermissions();
-                setChatPermissions.setChatId(chatId);
-                setChatPermissions.setPermissions(chatPermissions);
-//                telegramBot.execute(setChatPermissions);
+//                SetChatPermissions setChatPermissions = new SetChatPermissions();
+//                setChatPermissions.setChatId(chatId);
+//                setChatPermissions.setPermissions(chatPermissions);
 
+//                RestrictChatMember restrictChatMember=new RestrictChatMember();
+//                restrictChatMember.setChatId(chatId);
+//                restrictChatMember.setUserId(userId);
+//                restrictChatMember.setPermissions(chatPermissions);
+//                telegramBot.execute(restrictChatMember);
 
+//                LeaveChat leaveChat=new LeaveChat();
+//                leaveChat.setChatId(chatId);
+//                telegramBot.execute(leaveChat);
                 break;
             case "/stop":
                 telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
 //                botState = BotState.FILLING_PROFILE;
                 break;
             default:
+                System.out.println("Bax buraaaaaaaa");
                 botState = userOrderCache.getUsersCurrentBotState(userId);
-                replyMessage = botStateContext.processInputMessage(botState, message);
+                replyMessage = botStateContext.processInputMessage(userOrderCache.getCurrentButtonTypeAndMessage(userId),botState, message);
                 break;
         }
 
@@ -147,11 +168,9 @@ public class TelegramFacade {
         final long chatId = buttonQuery.getMessage().getChatId();
         final int userId = buttonQuery.getFrom().getId();
         final int messageId = buttonQuery.getMessage().getMessageId();
-//        BotApiMethod<?> callBackAnswer = mainMenuService.getMainMenuMessage(chatId, "İstəyirsizsə,əsas menudan istifadə edin");
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
         Order userOrder = userOrderCache.getUserOrder(userId);
 
-        //Language choose buttons
         if (buttonQuery.getData().startsWith("Lang")) {
 
             callBackAnswer.add(getLanguageType(buttonQuery, userOrder));
@@ -161,23 +180,13 @@ public class TelegramFacade {
             callBackAnswer.add(new EditMessageReplyMarkup().setChatId(chatId).setMessageId(messageId).setReplyMarkup(null));
 
         } else if (buttonQuery.getData().startsWith("Order")) {
-//            Nexte bax
             Question question = questionRepo.findById(userOrderCache.getQuestionIdAndNext(userId).getNext()).orElse(null);
 
             if (question == null) {
-                //Son question olanda bura girsin
                 userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
-                callBackAnswer.add(new SendMessage(chatId, ""));
+                callBackAnswer.add(new SendMessage(chatId, sendEndingMessage(userOrder)));
+               return callBackAnswer;
             }
-//            if (question == null) {
-//                System.out.println("Bura girir");
-//                callBackAnswer.add(new SendMessage(chatId, "Adınızı qeyd edə bilərsiniz ?"));
-//                findCallback(buttonQuery, userOrder, userOrderCache.getQuestionIdAndNext(userId));
-//            } else {
-//            System.out.println("Burdadir");
-
-            //String message ve question type qaytar burda
-
 
             findCallback(buttonQuery, userOrder, userOrderCache.getQuestionIdAndNext(userId));
             CurrentButtonTypeAndMessage currentButtonTypeAndMessage = userOrderCache.getCurrentButtonTypeAndMessage(userId);
@@ -191,11 +200,19 @@ public class TelegramFacade {
                 callBackAnswer.add(new EditMessageReplyMarkup().setChatId(chatId).setMessageId(messageId).setReplyMarkup(null));
 
             } else {
+
                 callBackAnswer.add(new DeleteMessage().setChatId(chatId).setMessageId(messageId));
                 userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
             }
         } else {
-            callBackAnswer = getDateTime(buttonQuery, userOrder);
+            Question question = questionRepo.findById(userOrderCache.getQuestionIdAndNext(userId).getNext()).orElse(null);
+            callBackAnswer=getDateTime(buttonQuery, userOrder);
+            if (callBackAnswer.contains(null)){
+                callBackAnswer = callBackAnswer.stream().filter(a->a!=null).collect(Collectors.toList());
+                callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId,
+                        userOrderCache, question));
+            }
+
         }
 
         userOrderCache.saveUserOrder(userId, userOrder);
@@ -205,6 +222,18 @@ public class TelegramFacade {
 
 
     }
+
+//    public static String sendEndingMessage(Order userOrder) {
+//        String text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Əla,qısa zamanda sizə təkliflər göndərəcəyik.";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Отлично, мы пришлем вам предложения в кратчайшие сроки";
+//        } else {
+//            text = "Excellent, we will send you suggestions as soon as possible";
+//        }
+//        return text;
+//    }
 
     private List<BotApiMethod<?>> getDateTime(CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
@@ -226,45 +255,68 @@ public class TelegramFacade {
                 callBackAnswer.add(new DeleteMessage().setChatId(buttonQuery.getMessage().getChatId()).setMessageId(buttonQuery.getMessage().getMessageId()));
             }
 
+        } else if (Arrays.stream(WD).anyMatch(a -> a.equals(buttonQuery.getData())) || buttonQuery.getData().equals(IGNORE)) {
+            callBackAnswer.add(sendAnswerCallbackQuery(sendIgnoreMessage(userOrder), true, buttonQuery));
+        } else {
+            findCallback(buttonQuery, userOrder, userOrderCache.getQuestionIdAndNext(buttonQuery.getFrom().getId()));
+            callBackAnswer.add(new DeleteMessage().setChatId(buttonQuery.getMessage().getChatId()).setMessageId(buttonQuery.getMessage().getMessageId()));
+            callBackAnswer.add(new SendMessage(buttonQuery.getMessage().getChatId(),
+                    "<b>" + userOrderCache.getCurrentButtonTypeAndMessage(buttonQuery.getFrom().getId()).getMessage() + "</b>")
+                    .setParseMode("HTML"));
+            callBackAnswer.add(null);
         }
 
         return callBackAnswer;
     }
 
-    private String getPrevCalendarMessage(Order userOrder) {
-        String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Yalnız indiki və gələcək zamanı seçə bilərsiz";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Вы можете выбрать только настоящее и будущее время";
-        } else {
-            text = "You can only choose the present and future tenses";
-        }
-        return text;
-    }
+//    private String sendIgnoreMessage(Order userOrder) {
+//        String text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Yalnız tarixləri seçə bilərsiz";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Вы можете выбрать только даты";
+//        } else {
+//            text = "You can only select dates";
+//        }
+//        return text;
+//    }
+//
+//    private String getPrevCalendarMessage(Order userOrder) {
+//        String text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Yalnız indiki və gələcək zamanı seçə bilərsiz";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Вы можете выбрать только настоящее и будущее время";
+//        } else {
+//            text = "You can only choose the present and future tenses";
+//        }
+//        return text;
+//    }
 
 
     @SneakyThrows
     private BotApiMethod<?> findCallback(CallbackQuery buttonQuery, Order userOrder, QuestionIdAndNext questionIdAndNext) {
         final int userId = buttonQuery.getFrom().getId();
         BotApiMethod<?> callBackAnswer = null;
-
         List<QuestionAction> questionActions = questionActionRepo.findQuestionActionsByNext(questionIdAndNext.getNext());
         Class<?> order = userOrder.getClass();
         for (var item : questionActions) {
+            Field field = order.getDeclaredField(item.getKeyword());
+            field.setAccessible(true);
+            Class<?> type = field.getType();
             if (buttonQuery.getData().equals(item.getKeyword() + item.getId())) {
+
                 if (item.getType().equals(QuestionType.Button)) {
                     QuestionAction questionAction = questionActionRepo.findById(item.getId()).get();
 
                     Object text = questionAction.getText();
-                    Field field = order.getDeclaredField(item.getKeyword());
-                    field.setAccessible(true);
-                    Class<?> type = field.getType();
+
                     if (isPrimitive(type)) {
-                        Class<?> boxed = boxPrimitiveClass(type);
-                        text = boxed.cast(text);
+                        Object boxed = boxPrimitiveClass(type,text.toString());
+                        field.set(userOrder, boxed);
+                    }else{
+                        field.set(userOrder, text);
                     }
-                    field.set(userOrder, text);
                     userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(item.getType())
                             .message(text.toString()).build());
 
@@ -276,6 +328,15 @@ public class TelegramFacade {
 
 
                 break;
+            } else if (item.getType().equals(QuestionType.Button_Calendar)) {
+                Object text = buttonQuery.getData();
+                DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
+                DateTime dateTime = FORMATTER.parseDateTime(text.toString());
+                LocalDate localDate = dateTime.toLocalDate();
+
+                field.set(userOrder, localDate);
+                userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(item.getType())
+                        .message(text.toString()).build());
             }
         }
 
@@ -287,23 +348,20 @@ public class TelegramFacade {
                 || type == boolean.class || type == byte.class || type == char.class || type == short.class);
     }
 
-    public static Class<?> boxPrimitiveClass(Class<?> type) {
+    public static Object boxPrimitiveClass(Class<?> type,String text) {
         if (type == int.class) {
-            return Integer.class;
+
+            return Integer.valueOf(text);
         } else if (type == long.class) {
-            return Long.class;
+            return Long.valueOf(text);
         } else if (type == double.class) {
-            return Double.class;
+            return Double.valueOf(text);
         } else if (type == float.class) {
-            return Float.class;
-        } else if (type == boolean.class) {
-            return Boolean.class;
+            return Float.valueOf(text);
         } else if (type == byte.class) {
-            return Byte.class;
-        } else if (type == char.class) {
-            return Character.class;
+            return Byte.valueOf(text);
         } else if (type == short.class) {
-            return Short.class;
+            return Short.valueOf(text);
         } else {
             String string = "class '" + type.getName() + "' is not a primitive";
             throw new IllegalArgumentException(string);

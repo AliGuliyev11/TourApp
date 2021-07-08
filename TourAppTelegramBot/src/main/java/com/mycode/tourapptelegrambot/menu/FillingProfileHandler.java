@@ -7,9 +7,11 @@ import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
 import com.mycode.tourapptelegrambot.dto.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
+import com.mycode.tourapptelegrambot.inlineButtons.UniversalInlineButtons;
 import com.mycode.tourapptelegrambot.models.Order;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
+import com.mycode.tourapptelegrambot.repositories.OrderRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
@@ -25,31 +27,29 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.boxPrimitiveClass;
-import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.isPrimitive;
+import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.*;
 
 
 @Slf4j
 @Component
 public class FillingProfileHandler implements InputMessageHandler {
 
-    private static final String EMAIL_REGEX = "([a-zA-Z0-9_.+-])+\\@(([a-zA-Z0-9-])+\\.)+([a-zA-Z0-9]{2,4})";
-    private static final String PHONE_REGEX = "[+]{1}[9]{2}[4]{1}(([5]([0]|[1]|[5]))|([7]([0]|[7]))|([9]([9])))[1-9][0-9]{6}";
-    private static final String ONLY_WORD_REGEX = "[a-zA-Z]+";
-    //
+
     private UserOrderCache userOrderCache;
     QuestionActionRepo questionActionRepo;
     QuestionRepo questionRepo;
-//    private ReplyMessagesService messagesService;
+    OrderRepo orderRepo;
 
-    public FillingProfileHandler(UserOrderCache userDataCache, QuestionActionRepo questionActionRepo, QuestionRepo questionRepo) {
+    public FillingProfileHandler(UserOrderCache userDataCache, QuestionActionRepo questionActionRepo,
+                                 QuestionRepo questionRepo, OrderRepo orderRepo) {
         this.userOrderCache = userDataCache;
-//        this.messagesService = messagesService;
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
+        this.orderRepo = orderRepo;
     }
 
     @Override
@@ -85,41 +85,29 @@ public class FillingProfileHandler implements InputMessageHandler {
                 userOrderCache.setUsersCurrentBotState(userId, BotState.VALIDATION);
                 processUsersInput(inputMsg);
             } else {
-                mapToObject(userId, userOrder, usersAnswer);
+                replyToUser = mapToObject(userId, userOrder, usersAnswer);
+                if (replyToUser != null) {
+                    return replyToUser;
+                }
                 Question question = questionRepo.findById(userOrderCache.getQuestionIdAndNext(userId).getNext()).orElse(null);
                 if (question != null) {
-                    replyToUser = new SendMessage(chatId, question.getQuestion());
-                    userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
+
+                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, userOrderCache, question);
                     userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(QuestionType.Free_Text)
                             .message(question.getQuestion()).build());
-                    userOrderCache.setQuestionIdAndNext(userId,getQuestionIdAndNextFromQuestion(question));
+                    userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
+                    userOrderCache.setQuestionIdAndNext(userId, getQuestionIdAndNextFromQuestion(question));
+                    userOrderCache.saveUserOrder(userId, userOrder);
                 } else {
-                    replyToUser = new SendMessage().setChatId(chatId).setText("Calendar"+ Emojis.Clock).setReplyMarkup(new CalendarUtil().generateKeyboard(new LocalDate()));
+                    replyToUser = new SendMessage(chatId, sendEndingMessage(userOrder));
+                    userOrder.setCreatedDate(LocalDateTime.now());
+                    userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
+                    orderRepo.save(userOrder);
+                    userOrderCache.saveUserOrder(userId, null);
                 }
                 System.out.println(userOrder);
             }
         }
-
-//        if (botState.equals(BotState.PROFILE_FILLED)) {
-//
-//            if (!Pattern.matches(EMAIL_REGEX, usersAnswer)) {
-//                replyToUser = messagesService.getReplyMessage(chatId, "reply.falseEmailFormat");
-//                userDataCache.setUsersCurrentBotState(userId, BotState.ASK_EMAIL_FORMAT);
-//                processUsersInput(inputMsg);
-//            } else {
-//                profileData.setEmail(usersAnswer);
-//                profileData.setUserId(userId);
-//                profileData.setChatId(chatId);
-//                userDataCache.setUsersCurrentBotState(userId, BotState.SHOW_MAIN_MENU);
-//                replyToUser = messagesService.getReplyMessage(chatId, "reply.profileFilled");
-//                replyToUser.setParseMode("HTML");
-//                studentRepo.save(profileData);
-//                userDataCache.saveUserProfileData(userId, profileData);
-//            }
-//
-//        }
-
-//        userDataCache.saveUserProfileData(userId, profileData);
         return replyToUser;
     }
 
@@ -133,32 +121,32 @@ public class FillingProfileHandler implements InputMessageHandler {
     }
 
     @SneakyThrows
-    private BotApiMethod<?> mapToObject(int userId, Order userOrder, String userAnswer) {
-        BotApiMethod<?> callBackAnswer = null;
+    private SendMessage mapToObject(int userId, Order userOrder, String userAnswer) {
+        SendMessage callBackAnswer = null;
 
         QuestionIdAndNext questionIdAndNext = userOrderCache.getQuestionIdAndNext(userId);
-//        List<QuestionAction> questionActions = questionActionRepo.findQuestionActionsByNext(questionIdAndNext.getNext());
         Class<?> order = userOrder.getClass();
-//        for (var item : questionActions) {
-//            if (buttonQuery.getData().equals(item.getKeyword() + item.getId())) {
+
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
-        System.out.println("Bes bura " + questionAction.getText());
         Object text = userAnswer;
         Field field = order.getDeclaredField(questionAction.getKeyword());
-        System.out.println("Filed name:" + field.getName());
         field.setAccessible(true);
         Class<?> type = field.getType();
         if (isPrimitive(type)) {
-            Class<?> boxed = boxPrimitiveClass(type);
-            text = boxed.cast(text);
+            Object boxed = null;
+            try {
+                boxed = boxPrimitiveClass(type, text.toString());
+            } catch (Exception e) {
+                return new SendMessage(userOrder.getChatId(), userOrderCache.getCurrentButtonTypeAndMessage(userId).getMessage());
+            }
+            field.set(userOrder, boxed);
+        } else {
+            field.set(userOrder, text);
         }
-        field.set(userOrder, text);
+
         userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(questionAction.getType())
                 .message(text.toString()).build());
 
-//                break;
-//            }
-//        }
 
         return callBackAnswer;
     }

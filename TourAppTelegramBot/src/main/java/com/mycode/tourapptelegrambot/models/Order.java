@@ -3,11 +3,11 @@ package com.mycode.tourapptelegrambot.models;
 import com.mycode.tourapptelegrambot.enums.Languages;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.joda.time.LocalDate;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity(name = "myOrder")
 @Getter
@@ -26,9 +26,9 @@ public class Order implements Serializable {
     String Ordertravel;
     String Orderaddress1;
     String Orderaddress2;
-    Date date;
-    int numberOfTravellers;
-    int budget;
+    LocalDate Orderdate;
+    int Ordertraveller;
+    int Orderbudget;
     Long chatId;
     int userId;
     LocalDateTime createdDate;
@@ -42,9 +42,9 @@ public class Order implements Serializable {
                 ", Ordertravel='" + Ordertravel + '\'' +
                 ", Orderaddress1='" + Orderaddress1 + '\'' +
                 ", Orderaddress2='" + Orderaddress2 + '\'' +
-                ", date=" + date +
-                ", numberOfTravellers=" + numberOfTravellers +
-                ", budget=" + budget +
+                ", Orderdate=" + Orderdate +
+                ", Ordertraveller=" + Ordertraveller +
+                ", Orderbudget=" + Orderbudget +
                 ", chatId=" + chatId +
                 ", userId=" + userId +
                 ", createdDate=" + createdDate +

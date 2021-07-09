@@ -4,24 +4,20 @@ import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
 import com.mycode.tourapptelegrambot.dto.MessageAndBoolean;
 import com.mycode.tourapptelegrambot.dto.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.BotState;
-import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Order;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 @Component
 public class UserOrderCache implements DataCache {
-    private Map<Integer, BotState> usersBotStates = new HashMap<>();
-    private Map<Integer, Order> usersOrder = new HashMap<>();
-    private Map<Integer, QuestionIdAndNext> questionIdAndNext = new HashMap<>();
-    private Map<Integer, CurrentButtonTypeAndMessage> currentButtonTypeAndMessage = new HashMap<>();
-    private Map<Integer,Integer> calendarTime=new HashMap<>();
-    private Map<Integer, MessageAndBoolean> lastMessage=new HashMap<>();
+    private final Map<Integer, BotState> usersBotStates = new HashMap<>();
+    private final Map<Integer, Order> usersOrder = new HashMap<>();
+    private final Map<Integer, QuestionIdAndNext> questionIdAndNext = new HashMap<>();
+    private final Map<Integer, CurrentButtonTypeAndMessage> currentButtonTypeAndMessage = new HashMap<>();
+    private final Map<Integer,Integer> calendarTime=new HashMap<>();
+    private final Map<Integer, MessageAndBoolean> lastMessage=new HashMap<>();
 
 
     @Override

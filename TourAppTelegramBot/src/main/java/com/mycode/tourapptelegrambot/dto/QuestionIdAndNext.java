@@ -10,4 +10,5 @@ import lombok.*;
 public class QuestionIdAndNext {
     private Long questionId;
     private Long next;
+    private String regex;
 }

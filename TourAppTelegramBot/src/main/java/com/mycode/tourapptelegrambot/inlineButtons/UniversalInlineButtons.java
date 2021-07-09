@@ -11,7 +11,6 @@ import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.List;
 public class UniversalInlineButtons {
 
 
-    public SendMessage sendInlineKeyBoardMessage(int userId, long chatId, UserOrderCache userOrderCache, Question question) {
+    public SendMessage sendInlineKeyBoardMessage(int userId, long chatId,int messageId, UserOrderCache userOrderCache, Question question) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setText(question.getQuestion());
         sendMessage.setChatId(chatId);
@@ -36,13 +35,17 @@ public class UniversalInlineButtons {
                 InlineKeyboardButton keyboardButton = new InlineKeyboardButton().setText(item.getText());
                 keyboardButton.setCallbackData(item.getKeyword() + item.getId());
                 keyboardButtonsRow1.add(keyboardButton);
+                userOrderCache.setLastMessage(userId, MessageAndBoolean.builder().sendMessage(sendMessage).send(false).MessageId(messageId).build());
+
             }else if (item.getType().equals(QuestionType.Button_Calendar)){
-                userOrderCache.setQuestionIdAndNext(userId, QuestionIdAndNext.builder().questionId(questionId).next(next).build());
-                return sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(new LocalDate()));
+                userOrderCache.setQuestionIdAndNext(userId, QuestionIdAndNext.builder().questionId(questionId).next(next).regex(question.getRegex()).build());
+                userOrderCache.setLastMessage(userId, MessageAndBoolean.builder().sendMessage(sendMessage).send(false).MessageId(messageId).build());
+
+                return sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
             }
         }
 
-        userOrderCache.setQuestionIdAndNext(userId, QuestionIdAndNext.builder().questionId(questionId).next(next).build());
+        userOrderCache.setQuestionIdAndNext(userId, QuestionIdAndNext.builder().questionId(questionId).next(next).regex(question.getRegex()).build());
         userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(questionType)
                 .message(question.getQuestion()).build());
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
@@ -50,7 +53,6 @@ public class UniversalInlineButtons {
 
         inlineKeyboardMarkup.setKeyboard(rowList);
         sendMessage.setReplyMarkup(inlineKeyboardMarkup);
-        userOrderCache.setLastMessage(userId, MessageAndBoolean.builder().sendMessage(sendMessage).send(false).build());
 
         return sendMessage;
     }

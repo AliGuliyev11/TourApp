@@ -22,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.*;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
@@ -64,7 +65,8 @@ public class FillingProfileHandler implements InputMessageHandler {
         String usersAnswer = inputMsg.getText();
         int userId = inputMsg.getFrom().getId();
         long chatId = inputMsg.getChatId();
-
+        int messageId = inputMsg.getMessageId();
+        String regex=userOrderCache.getQuestionIdAndNext(userId).getRegex();
         Order userOrder = userOrderCache.getUserOrder(userId);
 //
         BotState botState = userOrderCache.getUsersCurrentBotState(userId);
@@ -75,7 +77,8 @@ public class FillingProfileHandler implements InputMessageHandler {
         }
 
         if (botState.equals(BotState.FILLING_TOUR)) {
-            if (usersAnswer.length() > 50) {
+
+            if (!Pattern.matches(regex,usersAnswer)) {
                 replyToUser = new SendMessage(chatId, userOrderCache.getCurrentButtonTypeAndMessage(userId).getMessage());
                 userOrderCache.setUsersCurrentBotState(userId, BotState.VALIDATION);
                 processUsersInput(inputMsg);
@@ -87,7 +90,7 @@ public class FillingProfileHandler implements InputMessageHandler {
                 Question question = questionRepo.findById(userOrderCache.getQuestionIdAndNext(userId).getNext()).orElse(null);
                 if (question != null) {
 
-                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, userOrderCache, question);
+                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId,messageId, userOrderCache, question);
                     userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(QuestionType.Free_Text)
                             .message(question.getQuestion()).build());
                     userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
@@ -112,6 +115,7 @@ public class FillingProfileHandler implements InputMessageHandler {
             questionIdAndNext.setNext(item.getNext());
             questionIdAndNext.setQuestionId(item.getId());
         }
+        questionIdAndNext.setRegex(question.getRegex());
         return questionIdAndNext;
     }
 

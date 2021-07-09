@@ -19,6 +19,7 @@ public class Question {
     Long id;
     String question;
     boolean isFirst;
+    String regex;
     @Enumerated(EnumType.STRING)
     Languages languages;
     @OneToMany(targetEntity = QuestionAction.class, mappedBy = "question")

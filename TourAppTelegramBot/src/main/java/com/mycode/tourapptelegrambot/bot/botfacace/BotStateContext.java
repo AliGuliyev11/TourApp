@@ -20,13 +20,9 @@ public class BotStateContext {
         messageHandlers.forEach(handler -> this.messageHandlers.put(handler.getHandlerName(), handler));
     }
 
-    public SendMessage processInputMessage(CurrentButtonTypeAndMessage currentButtonTypeAndMessage, BotState currentState, Message message) {
+    public SendMessage processInputMessage(BotState currentState, Message message) {
 
         InputMessageHandler currentMessageHandler = findMessageHandler(currentState);
-
-        if (isButtonType(currentButtonTypeAndMessage.getQuestionType())) {
-            return currentMessageHandler.handle(message);
-        }
 
         return currentMessageHandler.handle(message);
     }

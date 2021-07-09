@@ -2,9 +2,11 @@ package com.mycode.tourapptelegrambot.menu;
 
 
 import com.mycode.tourapptelegrambot.bot.botfacace.InputMessageHandler;
-import com.mycode.tourapptelegrambot.cache.UserOrderCache;
-import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
-import com.mycode.tourapptelegrambot.dto.QuestionIdAndNext;
+import com.mycode.tourapptelegrambot.redis.RedisCache.*;
+import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentBotState;
+import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentButtonTypeAndMessage;
+import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentOrder;
+import com.mycode.tourapptelegrambot.redis.redisEntity.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.inlineButtons.UniversalInlineButtons;
@@ -24,7 +26,6 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
-import static com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade.*;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.sendEndingMessage;
@@ -34,24 +35,34 @@ import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.
 @Component
 public class FillingProfileHandler implements InputMessageHandler {
 
-
-    private final UserOrderCache userOrderCache;
+    private final QuestionIdAndNextCache questionIdAndNextCache;
+    private final ButtonAndMessageCache buttonMessageCache;
+    private final MessageBoolCache messageBoolCache;
+    private final BotStateCache botStateCache;
+    private final OrderCache orderCache;
     private final QuestionActionRepo questionActionRepo;
     private final QuestionRepo questionRepo;
     private final OrderRepo orderRepo;
 
-    public FillingProfileHandler(UserOrderCache userDataCache, QuestionActionRepo questionActionRepo,
-                                 QuestionRepo questionRepo, OrderRepo orderRepo) {
-        this.userOrderCache = userDataCache;
+
+    public FillingProfileHandler(QuestionActionRepo questionActionRepo,
+                                 QuestionRepo questionRepo, OrderRepo orderRepo, QuestionIdAndNextCache questionIdAndNextCache,
+                                 ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
+                                 OrderCache orderCache) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
         this.orderRepo = orderRepo;
+        this.questionIdAndNextCache = questionIdAndNextCache;
+        this.buttonMessageCache = buttonMessageCache;
+        this.messageBoolCache = messageBoolCache;
+        this.botStateCache = botStateCache;
+        this.orderCache = orderCache;
     }
 
     @Override
     public SendMessage handle(Message message) {
-        if (userOrderCache.getUsersCurrentBotState(message.getFrom().getId()).equals(BotState.FILLING_TOUR)) {
-            userOrderCache.setUsersCurrentBotState(message.getFrom().getId(), BotState.FILLING_TOUR);
+        if (botStateCache.get(message.getFrom().getId()).getBotState().equals(BotState.FILLING_TOUR)) {
+            botStateCache.save(CurrentBotState.builder().userId(message.getFrom().getId()).botState(BotState.FILLING_TOUR).build());
         }
         return processUsersInput(message);
     }
@@ -66,42 +77,44 @@ public class FillingProfileHandler implements InputMessageHandler {
         int userId = inputMsg.getFrom().getId();
         long chatId = inputMsg.getChatId();
         int messageId = inputMsg.getMessageId();
-        String regex=userOrderCache.getQuestionIdAndNext(userId).getRegex();
-        Order userOrder = userOrderCache.getUserOrder(userId);
+        String regex = questionIdAndNextCache.get(userId).getRegex();
+        Order userOrder = orderCache.get(userId);
 //
-        BotState botState = userOrderCache.getUsersCurrentBotState(userId);
+        BotState botState = botStateCache.get(userId).getBotState();
 
         SendMessage replyToUser = null;
         if (botState.equals(BotState.VALIDATION)) {
-            userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
+            botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         }
 
         if (botState.equals(BotState.FILLING_TOUR)) {
 
-            if (!Pattern.matches(regex,usersAnswer)) {
-                replyToUser = new SendMessage(chatId, userOrderCache.getCurrentButtonTypeAndMessage(userId).getMessage());
-                userOrderCache.setUsersCurrentBotState(userId, BotState.VALIDATION);
+            if (!Pattern.matches(regex, usersAnswer)) {
+                replyToUser = new SendMessage(chatId, buttonMessageCache.get(userId).getMessage());
+                botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.VALIDATION).build());
                 processUsersInput(inputMsg);
             } else {
                 replyToUser = mapToObject(userId, userOrder, usersAnswer);
                 if (replyToUser != null) {
                     return replyToUser;
                 }
-                Question question = questionRepo.findById(userOrderCache.getQuestionIdAndNext(userId).getNext()).orElse(null);
+                Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
                 if (question != null) {
 
-                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId,messageId, userOrderCache, question);
-                    userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(QuestionType.Free_Text)
+                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
+                            questionIdAndNextCache, question, buttonMessageCache, messageBoolCache);
+                    buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.Free_Text)
                             .message(question.getQuestion()).build());
-                    userOrderCache.setUsersCurrentBotState(userId, BotState.FILLING_TOUR);
-                    userOrderCache.setQuestionIdAndNext(userId, getQuestionIdAndNextFromQuestion(question));
-                    userOrderCache.saveUserOrder(userId, userOrder);
+                    botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
+                    questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
+                    orderCache.save(CurrentOrder.builder().userId(userId).order(userOrder).build());
                 } else {
                     replyToUser = new SendMessage(chatId, sendEndingMessage(userOrder));
                     userOrder.setCreatedDate(LocalDateTime.now());
                     userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
                     orderRepo.save(userOrder);
-                    userOrderCache.saveUserOrder(userId, null);
+                    /** Empty cache*/
+                    orderCache.delete(userId);
                 }
                 System.out.println(userOrder);
             }
@@ -109,13 +122,14 @@ public class FillingProfileHandler implements InputMessageHandler {
         return replyToUser;
     }
 
-    private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question) {
+    private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, int userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
         for (var item : question.getQuestionActions()) {
             questionIdAndNext.setNext(item.getNext());
             questionIdAndNext.setQuestionId(item.getId());
         }
         questionIdAndNext.setRegex(question.getRegex());
+        questionIdAndNext.setUserId(userId);
         return questionIdAndNext;
     }
 
@@ -123,7 +137,8 @@ public class FillingProfileHandler implements InputMessageHandler {
     private SendMessage mapToObject(int userId, Order userOrder, String userAnswer) {
         SendMessage callBackAnswer = null;
 
-        QuestionIdAndNext questionIdAndNext = userOrderCache.getQuestionIdAndNext(userId);
+//        QuestionIdAndNext questionIdAndNext = userOrderCache.getQuestionIdAndNext(userId);
+        QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
         Class<?> order = userOrder.getClass();
 
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
@@ -136,14 +151,14 @@ public class FillingProfileHandler implements InputMessageHandler {
             try {
                 boxed = boxPrimitiveClass(type, text.toString());
             } catch (Exception e) {
-                return new SendMessage(userOrder.getChatId(), userOrderCache.getCurrentButtonTypeAndMessage(userId).getMessage());
+                return new SendMessage(userOrder.getChatId(), buttonMessageCache.get(userId).getMessage());
             }
             field.set(userOrder, boxed);
         } else {
             field.set(userOrder, text);
         }
 
-        userOrderCache.setCurrentButtonTypeAndMessage(userId, CurrentButtonTypeAndMessage.builder().questionType(questionAction.getType())
+        buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionAction.getType())
                 .message(text.toString()).build());
 
 

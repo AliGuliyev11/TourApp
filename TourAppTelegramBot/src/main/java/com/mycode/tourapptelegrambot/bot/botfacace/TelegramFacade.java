@@ -83,9 +83,6 @@ public class TelegramFacade {
 
         SendMessage replyMessage = null;
 
-
-//        System.out.println(userOrderCache.getLastMessage(update.getMessage().getFrom().getId()));
-
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             log.info("New callbackQuery from User: {}, userId: {}, with data: {}", update.getCallbackQuery().getFrom().getUserName(),
@@ -94,12 +91,11 @@ public class TelegramFacade {
                 telegramBot.Execute(item);
             }
         }
-
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             log.info("New message from User:{}, chatId: {},  with text: {}",
                     message.getFrom().getUserName(), message.getChatId(), message.getText());
-            if (!message.getText().equals("/start") && messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
+            if (!message.getText().equals("/continue") && !message.getText().equals("/start") && messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                     !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()) {
                 telegramBot.execute(new DeleteMessage().setChatId(message.getChatId()).setMessageId(message.getMessageId()));
                 return new SendMessage().setChatId(message.getChatId()).setText("");
@@ -117,29 +113,66 @@ public class TelegramFacade {
         BotState botState = null;
         SendMessage replyMessage = null;
         switch (inputMsg) {
+            case "/new":
             case "/start":
-                telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
-                telegramBot.sendPhoto(chatId, "Əvvəlcədən xoş istirahətlər" + Emojis.Beach, "src/main/resources/static/images/tourApp.jpg");
-                replyMessage = new SendMessage(chatId, "Dil seçimini edin zəhmət olmasa:").setReplyMarkup(getLanguageButtons());
-                replyMessage.setParseMode("HTML");
-                messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
-
-                botState = BotState.FILLING_TOUR;
-                orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(userId).chatId(chatId).build()).build());
+                System.out.println(orderCache.get(userId));
+//                orderCache.delete(userId);
+                if (orderCache.get(userId).getLanguage() != null) {
+                    replyMessage = new SendMessage(chatId, "Yenidən başlamaq üçün ilk öncə <b> stop </b> yazmalısan\n /stop -prosesi bitirmək üçün \n /continue-sullarınıza davam etmək üçün").setParseMode("HTML");
+                }else {
+                    replyMessage = startCase(userId, chatId);
+                    botState = BotState.FILLING_TOUR;
+                }
                 break;
             case "/stop":
                 telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
+                clearCache(userId);
 //                botState = BotState.FILLING_PROFILE;
                 break;
+            case "/continue":
+                if (buttonTypeAndMessage.get(userId)!= null) {
+                    Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
+                    replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, message.getMessageId(), questionIdAndNextCache,
+                            question, buttonTypeAndMessage, messageBoolCache);
+                    botState = BotState.FILLING_TOUR;
+                }else{
+                    replyMessage = new SendMessage(chatId, "Sizə veriləcək sual yoxdur").setParseMode("HTML");
+                }
+
+                break;
             default:
-                botState = botStateCache.get(userId).getBotState();
-                replyMessage = botStateContext.processInputMessage(botState, message);
+                if (buttonTypeAndMessage.get(userId)==null) {
+                    replyMessage = new SendMessage(chatId, "Yenidən başlamaq üçün ilk öncə <b> /start </b> yazmalısan\n /new -prosesi yenidən başlamaq üçün \n /stop -prosesi bitirmək üçün").setParseMode("HTML");
+                } else {
+                    botState = botStateCache.get(userId).getBotState();
+                    replyMessage = botStateContext.processInputMessage(botState, message);
+                }
                 break;
         }
 
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(botState).build());
         telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
         return replyMessage;
+    }
+
+    public void clearCache(int userId) {
+        orderCache.delete(userId);
+        botStateCache.delete(userId);
+        buttonTypeAndMessage.delete(userId);
+        messageBoolCache.delete(userId);
+        questionIdAndNextCache.delete(userId);
+        calendarCache.delete(userId);
+    }
+
+    @SneakyThrows
+    private SendMessage startCase(int userId, Long chatId) {
+        telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
+        telegramBot.sendPhoto(chatId, "Əvvəlcədən xoş istirahətlər" + Emojis.Beach, "src/main/resources/static/images/tourApp.jpg");
+        messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
+        orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(userId).chatId(chatId).build()).build());
+        SendMessage sendMessage = new SendMessage(chatId, "Dil seçimini edin zəhmət olmasa:").setReplyMarkup(getLanguageButtons());
+        sendMessage.setParseMode("HTML");
+        return sendMessage;
     }
 
     private List<BotApiMethod<?>> processCallbackQuery(CallbackQuery buttonQuery) {

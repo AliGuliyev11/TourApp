@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
-import com.mycode.tourapptelegrambot.cache.UserOrderCache;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -18,7 +17,7 @@ public class AskLanguage {
         InlineKeyboardButton buttonAz = new InlineKeyboardButton().setText("AZ" + Emojis.Azerbaijan);
         InlineKeyboardButton buttonRu = new InlineKeyboardButton().setText("RU" + Emojis.Russian);
         InlineKeyboardButton buttonEn = new InlineKeyboardButton().setText("EN" + Emojis.English);
-        //Every button must have callBackData, or else not work !
+
         buttonAz.setCallbackData("LangButtonAz");
         buttonRu.setCallbackData("LangButtonRu");
         buttonEn.setCallbackData("LangButtonEn");

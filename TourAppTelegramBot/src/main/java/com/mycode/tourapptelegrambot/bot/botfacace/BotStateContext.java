@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.bot.botfacace;
 
-import com.mycode.tourapptelegrambot.dto.CurrentButtonTypeAndMessage;
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import org.springframework.stereotype.Component;

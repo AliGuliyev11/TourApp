@@ -29,9 +29,11 @@ public class UniversalInlineButtons {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
         Long next = null;
+        Long prev = null;
         Long questionId = null;
         QuestionType questionType = null;
         for (var item : question.getQuestionActions()) {
+            prev = item.getQuestion().getId();
             next = item.getNext();
             questionId = item.getId();
             questionType = item.getType();
@@ -41,13 +43,13 @@ public class UniversalInlineButtons {
                 keyboardButtonsRow1.add(keyboardButton);
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
-                cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).build());
+                cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
                 return sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
             }
         }
 
-        cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).build());
+        cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).prev(prev).build());
         buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
                 .message(question.getQuestion()).build());
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();

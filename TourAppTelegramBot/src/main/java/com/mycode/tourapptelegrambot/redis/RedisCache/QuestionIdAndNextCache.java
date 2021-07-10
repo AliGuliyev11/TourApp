@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class QuestionIdAndNextCache {
-    public static final String HASH_KEY = "QuestionIdAndNext";
+    public static final String HASH_KEY = "QuestionNextPrevRegex";
     private RedisTemplate template;
 
     public QuestionIdAndNextCache(RedisTemplate template) {
@@ -26,6 +26,8 @@ public class QuestionIdAndNextCache {
 
 
     public void delete(int userId){
-        template.opsForHash().delete(HASH_KEY,userId);
+        if (get(userId)!=null){
+            template.opsForHash().delete(HASH_KEY,userId);
+        }
     }
 }

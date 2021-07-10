@@ -30,7 +30,17 @@ public class OrderCache {
     }
 
 
+    public boolean checkOrder(int userId){
+        CurrentOrder currentOrder=(CurrentOrder) template.opsForHash().get(HASH_KEY,userId);
+        if (currentOrder==null){
+            return false;
+        }
+        return true;
+    }
+
     public void delete(int userId){
-        template.opsForHash().delete(HASH_KEY,userId);
+        if (get(userId)!=null){
+            template.opsForHash().delete(HASH_KEY,userId);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.mycode.tourapptelegrambot.menu;
 
 
 import com.mycode.tourapptelegrambot.bot.botfacace.InputMessageHandler;
+import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentBotState;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentButtonTypeAndMessage;
@@ -114,7 +115,7 @@ public class FillingProfileHandler implements InputMessageHandler {
                     userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
                     orderRepo.save(userOrder);
                     /** Empty cache*/
-                    orderCache.delete(userId);
+                    deleteCache(userId);
                 }
                 System.out.println(userOrder);
             }
@@ -122,9 +123,20 @@ public class FillingProfileHandler implements InputMessageHandler {
         return replyToUser;
     }
 
+    private void deleteCache(int userId) {
+        botStateCache.delete(userId);
+        buttonMessageCache.delete(userId);
+        messageBoolCache.delete(userId);
+        questionIdAndNextCache.delete(userId);
+        Languages languages=orderCache.get(userId).getLanguage();
+        orderCache.delete(userId);
+        orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().language(languages).build()).build());
+    }
+
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, int userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
         for (var item : question.getQuestionActions()) {
+            questionIdAndNext.setPrev(item.getQuestion().getId());
             questionIdAndNext.setNext(item.getNext());
             questionIdAndNext.setQuestionId(item.getId());
         }

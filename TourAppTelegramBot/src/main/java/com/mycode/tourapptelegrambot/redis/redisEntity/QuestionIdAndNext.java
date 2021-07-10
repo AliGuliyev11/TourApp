@@ -11,11 +11,12 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("QuestionIdAndNext")
+@RedisHash("QuestionNextPrevRegex")
 public class QuestionIdAndNext implements Serializable {
     @Id
     private int userId;
     private Long questionId;
     private Long next;
     private String regex;
+    private Long prev;
 }

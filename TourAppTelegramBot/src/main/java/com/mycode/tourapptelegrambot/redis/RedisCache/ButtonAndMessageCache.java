@@ -26,6 +26,8 @@ public class ButtonAndMessageCache {
 
 
     public void delete(int userId){
-        template.opsForHash().delete(HASH_KEY,userId);
+        if (get(userId)!=null){
+            template.opsForHash().delete(HASH_KEY,userId);
+        }
     }
 }

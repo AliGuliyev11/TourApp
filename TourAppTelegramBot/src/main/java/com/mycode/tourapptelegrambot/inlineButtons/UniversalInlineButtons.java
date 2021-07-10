@@ -27,7 +27,8 @@ public class UniversalInlineButtons {
         sendMessage.setText(question.getQuestion());
         sendMessage.setChatId(chatId);
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         Long next = null;
         Long prev = null;
         Long questionId = null;
@@ -38,9 +39,11 @@ public class UniversalInlineButtons {
             questionId = item.getId();
             questionType = item.getType();
             if (!item.getType().equals(QuestionType.Free_Text) && !item.getType().equals(QuestionType.Button_Calendar) && !item.getType().equals(QuestionType.Button_Numeric)) {
+                List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
                 InlineKeyboardButton keyboardButton = new InlineKeyboardButton().setText(item.getText());
                 keyboardButton.setCallbackData(item.getKeyword() + item.getId());
                 keyboardButtonsRow1.add(keyboardButton);
+                rowList.add(keyboardButtonsRow1);
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
@@ -52,8 +55,7 @@ public class UniversalInlineButtons {
         cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).prev(prev).build());
         buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
                 .message(question.getQuestion()).build());
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(keyboardButtonsRow1);
+
 
         inlineKeyboardMarkup.setKeyboard(rowList);
         sendMessage.setReplyMarkup(inlineKeyboardMarkup);

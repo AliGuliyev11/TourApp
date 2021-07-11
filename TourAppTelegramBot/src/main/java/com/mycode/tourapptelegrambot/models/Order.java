@@ -22,13 +22,22 @@ public class Order implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Enumerated(EnumType.STRING)
+    @Column(name = "language")
     Languages language;
+    @Column(name = "travel_type")
     String Ordertravel;
+    @Column(name = "where_from")
     String Orderaddress1;
+    @Column(name = "where_to")
     String Orderaddress2;
+    @Column(name = "order_date")
     LocalDate Orderdate;
+    @Column(name = "traveller_count")
     int Ordertraveller;
+    @Column(name = "budget")
     int Orderbudget;
+    @Column(name = "travel_time")
+    int Orderdateto;
     Long chatId;
     int userId;
     LocalDateTime createdDate;
@@ -45,6 +54,7 @@ public class Order implements Serializable {
                 ", Orderdate=" + Orderdate +
                 ", Ordertraveller=" + Ordertraveller +
                 ", Orderbudget=" + Orderbudget +
+                ", Orderdateto=" + Orderdateto +
                 ", chatId=" + chatId +
                 ", userId=" + userId +
                 ", createdDate=" + createdDate +

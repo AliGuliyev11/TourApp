@@ -95,10 +95,10 @@ public class ValidationResponseMessages {
             text = "Yenidən başlamaq üçün ilk öncə <b> /start </b> və ya <b> /new </b> yazmalısan\n/new - prosesi yenidən başlamaq üçün" +
                     "\n /stop - prosesi bitirmək üçün ";
         } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Для перезапуска необходимо сначала ввести <b> / start </b> или <b> / new </b>\n/new - перезапустить процесс" +
+            text = "Для перезапуска необходимо сначала ввести <b> /start </b> или <b> /new </b>\n/new - перезапустить процесс" +
                     "\n /stop - завершить процесс";
         } else {
-            text = "To restart, you must first type <b> / start </b> or <b> / new </b>\n/ new - to restart the process" +
+            text = "To restart, you must first type <b> /start </b> or <b> /new </b>\n/new - to restart the process" +
                     "\n /stop - end the process";
         }
         return text;

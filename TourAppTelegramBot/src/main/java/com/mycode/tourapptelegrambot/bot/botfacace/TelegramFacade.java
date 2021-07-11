@@ -94,6 +94,7 @@ public class TelegramFacade {
 
         SendMessage replyMessage = null;
 
+
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             log.info("New callbackQuery from User: {}, userId: {}, with data: {}", update.getCallbackQuery().getFrom().getUserName(),
@@ -192,7 +193,6 @@ public class TelegramFacade {
                 replyMessage = new SendMessage(chatId, getStopContinueCacheMessage()).setParseMode("HTML");
                 break;
             case "/continue":
-
                 if (buttonTypeAndMessage.get(userId) != null) {
                     Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
                     replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, message.getMessageId(), questionIdAndNextCache,

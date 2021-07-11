@@ -22,9 +22,7 @@ public class QuestionAction {
     Question question;
     @Enumerated(EnumType.STRING)
     QuestionType type;
-    //Callback datada istifade edersen
     String keyword;
-    //Buttonun textidir
     String text;
     Long next;
 }

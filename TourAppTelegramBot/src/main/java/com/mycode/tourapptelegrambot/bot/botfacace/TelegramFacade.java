@@ -19,6 +19,7 @@ import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
@@ -27,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
@@ -64,12 +66,12 @@ public class TelegramFacade {
     private final MessageBoolCache messageBoolCache;
     private final BotStateCache botStateCache;
     private final OrderCache orderCache;
-
+    private final LocaleMessageService messageService;
 
     public TelegramFacade(@Lazy TourAppBot telegramBot, BotStateContext botStateContext,
                           QuestionRepo question, QuestionActionRepo questionActionRepo, QuestionIdAndNextCache questionIdAndNextCache,
                           CalendarCache calendarCache, ButtonAndMessageCache buttonTypeAndMessage, MessageBoolCache messageBoolCache,
-                          BotStateCache botStateCache, OrderCache orderCache) {
+                          BotStateCache botStateCache, OrderCache orderCache, LocaleMessageService service) {
         this.telegramBot = telegramBot;
         this.botStateContext = botStateContext;
         this.questionRepo = question;
@@ -80,9 +82,12 @@ public class TelegramFacade {
         this.messageBoolCache = messageBoolCache;
         this.botStateCache = botStateCache;
         this.orderCache = orderCache;
+        this.messageService = service;
     }
 
-    /** Every time user send message program enters to this method */
+    /**
+     * Every time user send message program enters to this method
+     */
 
     @SneakyThrows
     public BotApiMethod<?> handleUpdate(Update update) {
@@ -117,28 +122,39 @@ public class TelegramFacade {
     }
 
 
-    /** Method for change @Voice to text
+    @Value("${ibm.apiKey}")
+    String apiKey;
+    @Value("${ibm.serviceUrl}")
+    String serviceUrl;
+    @Value("${voice.path}")
+    String voiceFilePath;
+    @Value("${voice.error}")
+    String errorMessage;
+
+    /**
+     * Method for change @Voice to text
      * This API owns to IBM cloud
-     * @Authenticator-API key
-     *@setServiceUrl-API url */
+     * Authenticator-API key
+     * setServiceUrl-API url
+     */
 
     @SneakyThrows
     private SendMessage speechToText(Voice voice, Long chatId) {
-        Authenticator authenticator = new IamAuthenticator("cQ5zzA_j2i7eF2mFN6ObfVsOs4QFgBbjexsO-c3NZr-_");
+        Authenticator authenticator = new IamAuthenticator(apiKey);
         SpeechToText speechToText = new SpeechToText(authenticator);
-        speechToText.setServiceUrl("https://api.eu-gb.speech-to-text.watson.cloud.ibm.com/instances/996d2801-4af5-4021-a79d-6f4ea3e68360");
+        speechToText.setServiceUrl(serviceUrl);
 
         telegramBot.voice(voice);
 
         RecognizeOptions recognizeOptions = new RecognizeOptions.Builder()
-                .audio(new FileInputStream("src/main/resources/static/docs/audio-file2.flac"))
+                .audio(new FileInputStream(voiceFilePath))
                 .contentType(voice.getMimeType())
                 .build();
 
         SpeechRecognitionResults speechRecognitionResults =
                 speechToText.recognize(recognizeOptions).execute().getResult();
         if (speechRecognitionResults.getResults().isEmpty()) {
-            return new SendMessage().setChatId(chatId).setText("Doesn't recognize voice");
+            return new SendMessage().setChatId(chatId).setText(errorMessage);
         } else {
             List<SpeechRecognitionResult> resultsList = speechRecognitionResults.getResults().stream().filter(SpeechRecognitionResult::isXFinal).collect(Collectors.toList());
             String a = resultsList.get(0).getAlternatives().get(0).getTranscript();
@@ -147,7 +163,9 @@ public class TelegramFacade {
     }
 
 
-    /** If message has text program enters to this method */
+    /**
+     * If message has text program enters to this method
+     */
 
     @SneakyThrows
     private SendMessage handleInputMessage(Message message) {
@@ -179,7 +197,11 @@ public class TelegramFacade {
                             question, buttonTypeAndMessage, messageBoolCache);
                     botState = BotState.FILLING_TOUR;
                 } else {
-                    replyMessage = new SendMessage(chatId, "Sizə veriləcək sual yoxdur").setParseMode("HTML");
+                    if (orderCache.get(userId).getLanguage() == null) {
+                        replyMessage = new SendMessage(chatId, "Yenidən başlamaq üçün ilk öncə <b> /start </b> yazmalısan\n /new -prosesi yenidən başlamaq üçün").setParseMode("HTML");
+                    } else {
+                        replyMessage = new SendMessage(chatId, getContinueMessage(orderCache.get(userId))).setParseMode("HTML");
+                    }
                 }
 
                 break;
@@ -211,6 +233,9 @@ public class TelegramFacade {
         calendarCache.delete(userId);
     }
 
+    @Value("${startCase.photoPath}")
+    String photoPath;
+
     /**
      * When user inout is /start program first sends photo
      * Then ask language
@@ -219,10 +244,10 @@ public class TelegramFacade {
     @SneakyThrows
     private SendMessage startCase(int userId, Long chatId) {
         telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
-        telegramBot.sendPhoto(chatId, "Əvvəlcədən xoş istirahətlər" + Emojis.Beach, "src/main/resources/static/images/tourApp.jpg");
+        telegramBot.sendPhoto(chatId, messageService.getMessage("startCase.firstMessage") + Emojis.Beach, photoPath);
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
         orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(userId).chatId(chatId).build()).build());
-        SendMessage sendMessage = new SendMessage(chatId, "Dil seçimini edin zəhmət olmasa:").setReplyMarkup(getLanguageButtons());
+        SendMessage sendMessage = new SendMessage(chatId, messageService.getMessage("startCase.askLang")).setReplyMarkup(getLanguageButtons());
         sendMessage.setParseMode("HTML");
         return sendMessage;
     }
@@ -269,8 +294,7 @@ public class TelegramFacade {
 
     /**
      * This method for calendar callback answer
-     *
-     * @processCallbackQuery's else statement
+     * processCallbackQuery's else statement
      */
 
     private List<BotApiMethod<?>> getDateCallbackAnswer(CallbackQuery buttonQuery, Order userOrder, int userId, long chatId,
@@ -287,8 +311,8 @@ public class TelegramFacade {
 
     /**
      * This method for order callback answer
-     *
-     * @processCallbackQuery's 2nd if statement
+     * <p>
+     * processCallbackQuery's 2nd if statement
      */
 
     private List<BotApiMethod<?>> getOrderCallbackAnswer(CurrentButtonTypeAndMessage currentButtonTypeAndMessage, int userId,
@@ -312,8 +336,7 @@ public class TelegramFacade {
 
     /**
      * This method for language callback answer
-     *
-     * @processCallbackQuery's 1st if  statement
+     * processCallbackQuery's 1st if  statement
      */
 
     private List<BotApiMethod<?>> getLanguageCallbackAnswer(int userId, long chatId, int messageId, CallbackQuery buttonQuery, Order userOrder) {
@@ -327,7 +350,9 @@ public class TelegramFacade {
         return callBackAnswer;
     }
 
-    /** Program enters to this method when program send calendar to user */
+    /**
+     * Program enters to this method when program send calendar to user
+     */
 
     private List<BotApiMethod<?>> getDateTime(CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
@@ -356,7 +381,9 @@ public class TelegramFacade {
         return callBackAnswer;
     }
 
-    /** Get next month calendar */
+    /**
+     * Get next month calendar
+     */
 
     private List<BotApiMethod<?>> getNextCalendar(int time, CallbackQuery buttonQuery) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
@@ -368,8 +395,10 @@ public class TelegramFacade {
         return callBackAnswer;
     }
 
-    /** Get previous month calendar
-     * If previous month @isBefore @LocaleDate.now() program send user callback answer */
+    /**
+     * Get previous month calendar
+     * If previous month @isBefore @LocaleDate.now() program send user callback answer
+     */
 
     private List<BotApiMethod<?>> getPrevCalendar(int time, CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
@@ -386,9 +415,11 @@ public class TelegramFacade {
     }
 
 
-    /** Dynamically finding button callback data
+    /**
+     * Dynamically finding button callback data
      * Program checks if keyword which comes from database matches button's  callback data
-     * If matched with keyword, program will do some operations*/
+     * If matched with keyword, program will do some operations
+     */
 
     @SneakyThrows
     private BotApiMethod<?> findCallback(CallbackQuery buttonQuery, Order userOrder, QuestionIdAndNext questionIdAndNext) {
@@ -413,13 +444,15 @@ public class TelegramFacade {
 
                 break;
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
-               return setCalendarField(buttonQuery,field,userId,item.getType(),userOrder);
+                return setCalendarField(buttonQuery, field, userId, item.getType(), userOrder);
             }
         }
         return callbackAnswer;
     }
 
-    /** Method for set calendar LocalDate field */
+    /**
+     * Method for set calendar LocalDate field
+     */
 
     @SneakyThrows
     private BotApiMethod<?> setCalendarField(CallbackQuery buttonQuery, Field field, int userId, QuestionType type, Order userOrder) {
@@ -476,20 +509,15 @@ public class TelegramFacade {
 
         final int userId = buttonQuery.getFrom().getId();
 
-        BotApiMethod<?> callBackAnswer;
-
         switch (buttonQuery.getData()) {
             case "LangButtonAz":
                 userOrder.setLanguage(Languages.AZ);
-                callBackAnswer = sendAnswerCallbackQuery("Botun dili Azərbaycan dili olaraq təyin olundu", buttonQuery);
                 break;
             case "LangButtonRu":
                 userOrder.setLanguage(Languages.RU);
-                callBackAnswer = sendAnswerCallbackQuery("Язык Ботуна был определен как русский", buttonQuery);
                 break;
             default:
                 userOrder.setLanguage(Languages.EN);
-                callBackAnswer = sendAnswerCallbackQuery("Bot's language was designated as English", buttonQuery);
                 break;
         }
 
@@ -498,7 +526,7 @@ public class TelegramFacade {
                 .message(userOrder.getLanguage().name()).build());
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(true).build());
 
-        return callBackAnswer;
+        return sendAnswerCallbackQuery(getBotLangMessage(userOrder), buttonQuery);
     }
 
 

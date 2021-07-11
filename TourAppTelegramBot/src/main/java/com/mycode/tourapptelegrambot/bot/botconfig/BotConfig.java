@@ -51,7 +51,7 @@ public class BotConfig {
         ReloadableResourceBundleMessageSource messageSource
                 = new ReloadableResourceBundleMessageSource();
 
-        messageSource.setBasename("src/main/resources/application.properties");
+        messageSource.setBasename("classpath:application");
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
     }

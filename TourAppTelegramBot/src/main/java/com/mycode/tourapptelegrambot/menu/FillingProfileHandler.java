@@ -31,6 +31,9 @@ import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveCla
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.sendEndingMessage;
 
+/**
+ * This class for when bot ask question without inline keyboard button
+ */
 
 @Slf4j
 @Component
@@ -68,12 +71,19 @@ public class FillingProfileHandler implements InputMessageHandler {
         return processUsersInput(message);
     }
 
+    /**
+     * When bot not ask question with inline keyboard button program set current bot state FILLING_TOUR
+     * And when user input message has text program checks this getHandlerName method of this class
+     */
+
     @Override
     public BotState getHandlerName() {
         return BotState.FILLING_TOUR;
     }
 
-    /** This methods for process actions for user input */
+    /**
+     * This methods for process actions for user input
+     */
 
     public SendMessage processUsersInput(Message inputMsg) {
         String usersAnswer = inputMsg.getText();
@@ -82,14 +92,17 @@ public class FillingProfileHandler implements InputMessageHandler {
         int messageId = inputMsg.getMessageId();
         String regex = questionIdAndNextCache.get(userId).getRegex();
         Order userOrder = orderCache.get(userId);
-//
         BotState botState = botStateCache.get(userId).getBotState();
 
+        return getReplyForBotState(botState, userId, chatId, messageId, usersAnswer, regex, userOrder, inputMsg);
+    }
+
+    private SendMessage getReplyForBotState(BotState botState, int userId, long chatId, int messageId, String usersAnswer,
+                                            String regex, Order userOrder, Message inputMsg) {
         SendMessage replyToUser = null;
         if (botState.equals(BotState.VALIDATION)) {
             botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         }
-
         if (botState.equals(BotState.FILLING_TOUR)) {
 
             if (!Pattern.matches(regex, usersAnswer)) {
@@ -103,21 +116,9 @@ public class FillingProfileHandler implements InputMessageHandler {
                 }
                 Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
                 if (question != null) {
-
-                    replyToUser = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
-                            questionIdAndNextCache, question, buttonMessageCache, messageBoolCache);
-                    buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.Free_Text)
-                            .message(question.getQuestion()).build());
-                    botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
-                    questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
-                    orderCache.save(CurrentOrder.builder().userId(userId).order(userOrder).build());
+                    replyToUser = replyQuestionNotNull(userId, chatId, messageId, question, userOrder);
                 } else {
-                    replyToUser = new SendMessage(chatId, sendEndingMessage(userOrder));
-                    userOrder.setCreatedDate(LocalDateTime.now());
-                    userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
-                    orderRepo.save(userOrder);
-                    /** Empty cache*/
-                    deleteCache(userId);
+                    replyToUser = replyQuestionNull(userId, chatId, userOrder);
                 }
                 System.out.println(userOrder);
             }
@@ -125,25 +126,50 @@ public class FillingProfileHandler implements InputMessageHandler {
         return replyToUser;
     }
 
-    /** When last answered correctly clear @Redis cache  */
+
+    private SendMessage replyQuestionNull(int userId, long chatId, Order userOrder) {
+        SendMessage sendMessage = new SendMessage(chatId, sendEndingMessage(userOrder));
+        userOrder.setCreatedDate(LocalDateTime.now());
+        userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
+        orderRepo.save(userOrder);
+        deleteCache(userId);
+        return sendMessage;
+    }
+
+    private SendMessage replyQuestionNotNull(int userId, long chatId, int messageId, Question question, Order userOrder) {
+        SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
+                questionIdAndNextCache, question, buttonMessageCache, messageBoolCache);
+        buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.Free_Text)
+                .message(question.getQuestion()).build());
+        botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
+        questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
+        orderCache.save(CurrentOrder.builder().userId(userId).order(userOrder).build());
+        return sendMessage;
+    }
+
+    /**
+     * When last answered correctly clear @Redis cache
+     */
 
     private void deleteCache(int userId) {
         botStateCache.delete(userId);
         buttonMessageCache.delete(userId);
         messageBoolCache.delete(userId);
         questionIdAndNextCache.delete(userId);
-        Languages languages=orderCache.get(userId).getLanguage();
+        Languages languages = orderCache.get(userId).getLanguage();
         orderCache.delete(userId);
         orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().language(languages).build()).build());
     }
 
 
-    /** This method for setting question info
-     * @Prev-Previous question id
-     * @Next-Next question id
-     * @QuestionId-Question Action entity's id
-     * @Regex-Question entity's field for validation
-     * @UserId-For @Redis cache*/
+    /**
+     * This method for setting question info
+     * Prev -Previous question id
+     * Next -Next question id
+     * QuestionId-Question Action entity's id
+     * Regex-Question entity's field for validation
+     * UserId-For @Redis cache
+     */
 
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, int userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
@@ -158,38 +184,39 @@ public class FillingProfileHandler implements InputMessageHandler {
     }
 
 
-    /** Mapping answer to object
+    /**
+     * Mapping answer to object
      * This method map dynamically to object by keyword
-     * Keyword comes from database and entity class filed name same as keyword*/
+     * Keyword comes from database and entity class filed name same as keyword
+     */
 
     @SneakyThrows
     private SendMessage mapToObject(int userId, Order userOrder, String userAnswer) {
-        SendMessage callBackAnswer = null;
 
         QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
         Class<?> order = userOrder.getClass();
 
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
-        Object text = userAnswer;
+//        Object text = userAnswer;
         Field field = order.getDeclaredField(questionAction.getKeyword());
         field.setAccessible(true);
         Class<?> type = field.getType();
         if (isPrimitive(type)) {
             Object boxed;
             try {
-                boxed = boxPrimitiveClass(type, text.toString());
+                boxed = boxPrimitiveClass(type, userAnswer);
             } catch (Exception e) {
                 return new SendMessage(userOrder.getChatId(), buttonMessageCache.get(userId).getMessage());
             }
             field.set(userOrder, boxed);
         } else {
-            field.set(userOrder, text);
+            field.set(userOrder, userAnswer);
         }
 
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionAction.getType())
-                .message(text.toString()).build());
+                .message(userAnswer).build());
 
-        return callBackAnswer;
+        return null;
     }
 
 

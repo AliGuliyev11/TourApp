@@ -1,15 +1,15 @@
 package com.mycode.tourapptelegrambot.utils;
 
 
-import com.google.gson.Gson;
 import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+/** This class for create calendar when QuestionType is Button_Calendar */
 
 public class CalendarUtil {
     public static final String IGNORE = "ignore!@#$%^&";

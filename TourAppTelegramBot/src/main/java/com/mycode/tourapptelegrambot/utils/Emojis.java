@@ -3,12 +3,11 @@ package com.mycode.tourapptelegrambot.utils;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.AllArgsConstructor;
 
+/** This enum for emojis */
 
 @AllArgsConstructor
 public enum Emojis {
-    SPARKLES(EmojiParser.parseToUnicode(":sparkles:")),
-    SCROLL(EmojiParser.parseToUnicode(":scroll:")),
-    MAGE(EmojiParser.parseToUnicode(":mage:")),
+
     Fire(EmojiParser.parseToUnicode(":fire:")),
     Question(EmojiParser.parseToUnicode(":question:")),
     Check(EmojiParser.parseToUnicode("✅")),

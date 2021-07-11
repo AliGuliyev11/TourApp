@@ -17,6 +17,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class for creating inline keyboard buttons dynamically
+ * With the help of QuestionType enum
+ */
+
 public class UniversalInlineButtons {
 
 
@@ -39,11 +44,7 @@ public class UniversalInlineButtons {
             questionId = item.getId();
             questionType = item.getType();
             if (!item.getType().equals(QuestionType.Free_Text) && !item.getType().equals(QuestionType.Button_Calendar) && !item.getType().equals(QuestionType.Button_Numeric)) {
-                List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-                InlineKeyboardButton keyboardButton = new InlineKeyboardButton().setText(item.getText());
-                keyboardButton.setCallbackData(item.getKeyword() + item.getId());
-                keyboardButtonsRow1.add(keyboardButton);
-                rowList.add(keyboardButtonsRow1);
+                rowList.add(addInlineKeyboardButton(item.getText(), item.getKeyword(), item.getId()));
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
@@ -61,5 +62,13 @@ public class UniversalInlineButtons {
         sendMessage.setReplyMarkup(inlineKeyboardMarkup);
 
         return sendMessage;
+    }
+
+    private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword, Long id) {
+        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+        InlineKeyboardButton keyboardButton = new InlineKeyboardButton().setText(text);
+        keyboardButton.setCallbackData(keyword + id);
+        keyboardButtonsRow1.add(keyboardButton);
+        return keyboardButtonsRow1;
     }
 }

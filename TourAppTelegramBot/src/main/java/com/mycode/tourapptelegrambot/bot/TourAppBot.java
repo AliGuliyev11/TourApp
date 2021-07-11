@@ -7,11 +7,13 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.ChatPermissions;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Voice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
@@ -45,7 +47,14 @@ public class TourAppBot extends TelegramWebhookBot {
 
     public void Execute(BotApiMethod<?> replyMessageToUser) throws TelegramApiException {
         execute(replyMessageToUser);
+    }
 
+    @SneakyThrows
+    public void voice(Voice voice) {
+        GetFile getFile = new GetFile().setFileId(voice.getFileId());
+        String filePath =execute(getFile).getFilePath();
+        File file =downloadFile(filePath, new File("src/main/resources/static/docs/audio-file2.flac"));
+        System.out.println(file.getName());
     }
 
     @Override

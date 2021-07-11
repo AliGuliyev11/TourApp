@@ -1,6 +1,9 @@
 package com.mycode.tourapptelegrambot.checkTypes;
 
 public class TypeCheck {
+
+    /** Checking type for dynamic mapping */
+
     public static boolean isPrimitive(Class<?> type) {
         return (type == int.class || type == long.class || type == double.class || type == float.class
                 || type == boolean.class || type == byte.class || type == char.class || type == short.class);

@@ -26,6 +26,9 @@ public class BotConfig {
     private String proxyHost;
     private int proxyPort;
 
+
+    /** Bot configuration @Bean */
+
     @Bean
     public TourAppBot tourAppBot(TelegramFacade telegramFacade) {
 
@@ -43,13 +46,13 @@ public class BotConfig {
         return mySuperTelegramBot;
     }
 
-//    @Bean
-//    public MessageSource messageSource() {
-//        ReloadableResourceBundleMessageSource messageSource
-//                = new ReloadableResourceBundleMessageSource();
-//
-//        messageSource.setBasename("classpath:messages");
-//        messageSource.setDefaultEncoding("UTF-8");
-//        return messageSource;
-//    }
+    @Bean
+    public MessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource
+                = new ReloadableResourceBundleMessageSource();
+
+        messageSource.setBasename("src/main/resources/application.properties");
+        messageSource.setDefaultEncoding("UTF-8");
+        return messageSource;
+    }
 }

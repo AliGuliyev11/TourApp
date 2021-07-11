@@ -73,6 +73,8 @@ public class FillingProfileHandler implements InputMessageHandler {
         return BotState.FILLING_TOUR;
     }
 
+    /** This methods for process actions for user input */
+
     public SendMessage processUsersInput(Message inputMsg) {
         String usersAnswer = inputMsg.getText();
         int userId = inputMsg.getFrom().getId();
@@ -123,6 +125,8 @@ public class FillingProfileHandler implements InputMessageHandler {
         return replyToUser;
     }
 
+    /** When last answered correctly clear @Redis cache  */
+
     private void deleteCache(int userId) {
         botStateCache.delete(userId);
         buttonMessageCache.delete(userId);
@@ -132,6 +136,14 @@ public class FillingProfileHandler implements InputMessageHandler {
         orderCache.delete(userId);
         orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().language(languages).build()).build());
     }
+
+
+    /** This method for setting question info
+     * @Prev-Previous question id
+     * @Next-Next question id
+     * @QuestionId-Question Action entity's id
+     * @Regex-Question entity's field for validation
+     * @UserId-For @Redis cache*/
 
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, int userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
@@ -145,11 +157,15 @@ public class FillingProfileHandler implements InputMessageHandler {
         return questionIdAndNext;
     }
 
+
+    /** Mapping answer to object
+     * This method map dynamically to object by keyword
+     * Keyword comes from database and entity class filed name same as keyword*/
+
     @SneakyThrows
     private SendMessage mapToObject(int userId, Order userOrder, String userAnswer) {
         SendMessage callBackAnswer = null;
 
-//        QuestionIdAndNext questionIdAndNext = userOrderCache.getQuestionIdAndNext(userId);
         QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
         Class<?> order = userOrder.getClass();
 
@@ -172,7 +188,6 @@ public class FillingProfileHandler implements InputMessageHandler {
 
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionAction.getType())
                 .message(text.toString()).build());
-
 
         return callBackAnswer;
     }

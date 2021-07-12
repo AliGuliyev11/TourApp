@@ -39,7 +39,7 @@ public class Order implements Serializable {
     @Column(name = "travel_time")
     int Orderdateto;
     Long chatId;
-    int userId;
+    String userId;
     LocalDateTime createdDate;
     LocalDateTime expiredDate;
 

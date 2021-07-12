@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class OrderCache {
-    public static final String HASH_KEY = "Order";
+    public static final String HASH_KEY = "BotOrder";
     private RedisTemplate template;
 
     public OrderCache(RedisTemplate template) {

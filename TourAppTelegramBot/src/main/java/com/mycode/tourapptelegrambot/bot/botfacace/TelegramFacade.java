@@ -8,6 +8,7 @@ import com.ibm.watson.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
+import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.*;
 import com.mycode.tourapptelegrambot.enums.BotState;
@@ -19,6 +20,7 @@ import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
+import com.mycode.tourapptelegrambot.repositories.UserRepo;
 import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
@@ -60,6 +62,7 @@ public class TelegramFacade {
     private final TourAppBot telegramBot;
     private final QuestionRepo questionRepo;
     private final QuestionActionRepo questionActionRepo;
+    private final UserRepo userRepo;
     private final QuestionIdAndNextCache questionIdAndNextCache;
     private final CalendarCache calendarCache;
     private final ButtonAndMessageCache buttonTypeAndMessage;
@@ -71,7 +74,7 @@ public class TelegramFacade {
     public TelegramFacade(@Lazy TourAppBot telegramBot, BotStateContext botStateContext,
                           QuestionRepo question, QuestionActionRepo questionActionRepo, QuestionIdAndNextCache questionIdAndNextCache,
                           CalendarCache calendarCache, ButtonAndMessageCache buttonTypeAndMessage, MessageBoolCache messageBoolCache,
-                          BotStateCache botStateCache, OrderCache orderCache, LocaleMessageService service) {
+                          BotStateCache botStateCache, OrderCache orderCache, LocaleMessageService service,UserRepo userRepo) {
         this.telegramBot = telegramBot;
         this.botStateContext = botStateContext;
         this.questionRepo = question;
@@ -83,6 +86,7 @@ public class TelegramFacade {
         this.botStateCache = botStateCache;
         this.orderCache = orderCache;
         this.messageService = service;
+        this.userRepo=userRepo;
     }
 
     /**
@@ -105,8 +109,9 @@ public class TelegramFacade {
         }
         Message message = update.getMessage();
 
-        if (message != null && message.hasVoice()) {
-            return speechToText(message.getVoice(), message.getChatId());
+        if (message!=null && !message.hasText()){
+            telegramBot.execute(new DeleteMessage().setChatId(message.getChatId()).setMessageId(message.getMessageId()));
+            return new SendMessage().setChatId(message.getChatId()).setText("");
         }
 
         if (message != null && message.hasText()) {
@@ -138,6 +143,7 @@ public class TelegramFacade {
      * This API owns to IBM cloud
      * Authenticator-API key
      * setServiceUrl-API url
+     * For Version 2
      */
 
     @SneakyThrows
@@ -233,6 +239,9 @@ public class TelegramFacade {
         messageBoolCache.delete(userId);
         questionIdAndNextCache.delete(userId);
         calendarCache.delete(userId);
+        MyUser myUser=userRepo.findById(userId).get();
+        myUser.setUuid(UUID.randomUUID().toString());
+        userRepo.save(myUser);
     }
 
     @Value("${startCase.photoPath}")
@@ -248,9 +257,11 @@ public class TelegramFacade {
         telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
         telegramBot.sendPhoto(chatId, messageService.getMessage("startCase.firstMessage") + Emojis.Beach, photoPath);
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
-        orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(userId).chatId(chatId).build()).build());
+        String uuid=UUID.randomUUID().toString();
+        orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(uuid).chatId(chatId).build()).build());
         SendMessage sendMessage = new SendMessage(chatId, messageService.getMessage("startCase.askLang")).setReplyMarkup(getLanguageButtons());
         sendMessage.setParseMode("HTML");
+        userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
         return sendMessage;
     }
 

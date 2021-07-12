@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.models;
 
-import com.mycode.tourapptelegrambot.enums.Languages;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,7 +14,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class MyUser {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    int id;
     Long chatId;
+    String uuid;
 }

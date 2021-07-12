@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.ApiContext;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
 
 @Setter
 @Getter
@@ -38,12 +39,12 @@ public class BotConfig {
         options.setProxyPort(proxyPort);
         options.setProxyType(proxyType);
 
-        TourAppBot mySuperTelegramBot = new TourAppBot(options,telegramFacade);
-        mySuperTelegramBot.setBotUsername(botUserName);
-        mySuperTelegramBot.setBotToken(botToken);
-        mySuperTelegramBot.setWebhookPath(webHookPath);
+        TourAppBot tourAppBot = new TourAppBot(options,telegramFacade);
+        tourAppBot.setBotUsername(botUserName);
+        tourAppBot.setBotToken(botToken);
+        tourAppBot.setWebhookPath(webHookPath);
 
-        return mySuperTelegramBot;
+        return tourAppBot;
     }
 
     @Bean

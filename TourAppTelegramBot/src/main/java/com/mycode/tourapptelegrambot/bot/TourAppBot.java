@@ -9,6 +9,7 @@ import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -37,6 +38,7 @@ public class TourAppBot extends TelegramWebhookBot {
         return botToken;
     }
 
+    @SneakyThrows
     @Override
     public BotApiMethod onWebhookUpdateReceived(Update update) {
 
@@ -53,8 +55,8 @@ public class TourAppBot extends TelegramWebhookBot {
     @SneakyThrows
     public void voice(Voice voice) {
         GetFile getFile = new GetFile().setFileId(voice.getFileId());
-        String filePath =execute(getFile).getFilePath();
-        File file =downloadFile(filePath, new File("src/main/resources/static/docs/audio-file2.flac"));
+        String filePath = execute(getFile).getFilePath();
+        File file = downloadFile(filePath, new File("src/main/resources/static/docs/audio-file2.flac"));
         System.out.println(file.getName());
     }
 

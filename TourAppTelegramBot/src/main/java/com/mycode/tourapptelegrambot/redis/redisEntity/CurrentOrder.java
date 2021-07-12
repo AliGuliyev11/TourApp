@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("Order")
+@RedisHash("BotOrder")
 public class CurrentOrder implements Serializable {
     @Id
     int userId;

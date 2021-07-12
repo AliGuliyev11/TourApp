@@ -197,7 +197,6 @@ public class FillingProfileHandler implements InputMessageHandler {
         Class<?> order = userOrder.getClass();
 
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
-//        Object text = userAnswer;
         Field field = order.getDeclaredField(questionAction.getKeyword());
         field.setAccessible(true);
         Class<?> type = field.getType();

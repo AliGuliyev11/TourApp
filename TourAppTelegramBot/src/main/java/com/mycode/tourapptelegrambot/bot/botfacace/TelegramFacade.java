@@ -290,6 +290,7 @@ public class TelegramFacade {
                 callBackAnswer.add(new SendMessage(chatId, sendEndingMessage(userOrder)));
                 return callBackAnswer;
             }
+
             findCallback(buttonQuery, userOrder, questionIdAndNextCache.get(userId));
             callBackAnswer = getOrderCallbackAnswer(buttonTypeAndMessage.get(userId), userId, chatId, messageId, question);
 

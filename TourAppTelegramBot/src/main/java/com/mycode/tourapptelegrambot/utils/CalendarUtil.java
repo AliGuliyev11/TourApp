@@ -24,12 +24,10 @@ public class CalendarUtil {
 
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-        // row - Month and Year
         List<InlineKeyboardButton> headerRow = new ArrayList<>();
         headerRow.add(createButton(IGNORE, new SimpleDateFormat("MMM yyyy").format(date.toDate())));
         keyboard.add(headerRow);
 
-        // row - Days of the week
         List<InlineKeyboardButton> daysOfWeekRow = new ArrayList<>();
         for (String day : WD) {
             daysOfWeekRow.add(createButton(IGNORE, day));

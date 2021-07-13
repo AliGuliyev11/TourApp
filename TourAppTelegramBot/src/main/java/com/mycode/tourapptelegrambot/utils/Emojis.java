@@ -19,7 +19,8 @@ public enum Emojis {
     Russian(EmojiParser.parseToUnicode(":ru:")),
     English(EmojiParser.parseToUnicode(":gb:")),
     Beach(EmojiParser.parseToUnicode(":umbrella_on_ground:")),
-    Clock(EmojiParser.parseToUnicode(":calendar:"));
+    Clock(EmojiParser.parseToUnicode(":calendar:")),
+    Phone(EmojiParser.parseToUnicode(":phone:"));
 
 
 

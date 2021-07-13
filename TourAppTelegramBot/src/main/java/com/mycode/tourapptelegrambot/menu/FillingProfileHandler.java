@@ -3,6 +3,7 @@ package com.mycode.tourapptelegrambot.menu;
 
 import com.mycode.tourapptelegrambot.bot.botfacace.InputMessageHandler;
 import com.mycode.tourapptelegrambot.enums.Languages;
+import com.mycode.tourapptelegrambot.rabbitmq.rabbitservice.RabbitMQService;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentBotState;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentButtonTypeAndMessage;
@@ -25,6 +26,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
@@ -44,15 +47,17 @@ public class FillingProfileHandler implements InputMessageHandler {
     private final MessageBoolCache messageBoolCache;
     private final BotStateCache botStateCache;
     private final OrderCache orderCache;
+    private final OfferCache offerCache;
     private final QuestionActionRepo questionActionRepo;
     private final QuestionRepo questionRepo;
     private final OrderRepo orderRepo;
+    private final RabbitMQService rabbitMQService;
 
 
     public FillingProfileHandler(QuestionActionRepo questionActionRepo,
                                  QuestionRepo questionRepo, OrderRepo orderRepo, QuestionIdAndNextCache questionIdAndNextCache,
                                  ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
-                                 OrderCache orderCache) {
+                                 OrderCache orderCache,RabbitMQService rabbitMQService,OfferCache offerCache) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
         this.orderRepo = orderRepo;
@@ -61,6 +66,8 @@ public class FillingProfileHandler implements InputMessageHandler {
         this.messageBoolCache = messageBoolCache;
         this.botStateCache = botStateCache;
         this.orderCache = orderCache;
+        this.rabbitMQService=rabbitMQService;
+        this.offerCache=offerCache;
     }
 
     @Override
@@ -129,9 +136,13 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     private SendMessage replyQuestionNull(int userId, long chatId, Order userOrder) {
         SendMessage sendMessage = new SendMessage(chatId, sendEndingMessage(userOrder));
-        userOrder.setCreatedDate(LocalDateTime.now());
-        userOrder.setExpiredDate(LocalDateTime.now().plusHours(24));
+        userOrder.setCreatedDate(new Date());
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 24);
+        userOrder.setExpiredDate(calendar.getTime());
         orderRepo.save(userOrder);
+        rabbitMQService.send(userOrder);
         deleteCache(userId);
         return sendMessage;
     }
@@ -155,6 +166,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         botStateCache.delete(userId);
         buttonMessageCache.delete(userId);
         messageBoolCache.delete(userId);
+        offerCache.delete(userId);
         questionIdAndNextCache.delete(userId);
         Languages languages = orderCache.get(userId).getLanguage();
         orderCache.delete(userId);

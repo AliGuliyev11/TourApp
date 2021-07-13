@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.redis.redisEntity;
 
-import com.mycode.tourapptelegrambot.models.Order;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -12,9 +11,9 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("TelegramOrder")
-public class CurrentOrder implements Serializable {
+@RedisHash("OfferCount")
+public class OfferCount implements Serializable {
     @Id
     int userId;
-    Order order;
+    Integer count;
 }

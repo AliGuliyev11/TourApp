@@ -94,6 +94,13 @@ public class TourAppBot extends TelegramWebhookBot {
     }
 
     @SneakyThrows
+    public void sendOffer(long chatId, File image) {
+        SendPhoto sendPhoto = new SendPhoto().setPhoto(image);
+        sendPhoto.setChatId(chatId);
+        execute(sendPhoto);
+    }
+
+    @SneakyThrows
     public void sendDocument(long chatId, String caption, File sendFile) {
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(chatId);

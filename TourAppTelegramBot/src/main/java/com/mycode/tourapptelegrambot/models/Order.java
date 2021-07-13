@@ -8,6 +8,7 @@ import org.joda.time.LocalDate;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity(name = "myOrder")
 @Getter
@@ -31,7 +32,7 @@ public class Order implements Serializable {
     @Column(name = "where_to")
     String Orderaddress2;
     @Column(name = "order_date")
-    LocalDate Orderdate;
+    Date Orderdate;
     @Column(name = "traveller_count")
     int Ordertraveller;
     @Column(name = "budget")
@@ -40,8 +41,8 @@ public class Order implements Serializable {
     int Orderdateto;
     Long chatId;
     String userId;
-    LocalDateTime createdDate;
-    LocalDateTime expiredDate;
+    Date createdDate;
+    Date expiredDate;
 
     @Override
     public String toString() {

@@ -45,10 +45,11 @@ public class OfferService {
         this.rabbitStopService = stopService;
     }
 
-    public void save(Offer offer, MyUser user) {
+    public void save(Offer offer, MyUser user, boolean isFive) {
         UserOffer userOffer = modelMapper.map(offer, UserOffer.class);
         modelMapper.getConfiguration().setAmbiguityIgnored(true);
         userOffer.setMyUser(user);
+        userOffer.setFirstFive(isFive);
         userOfferRepo.save(userOffer);
     }
 
@@ -58,8 +59,8 @@ public class OfferService {
         List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         for (UserOffer item : offers) {
             String text = "Agent:" + item.getAgencyName() + "\n" + item.getAgencyNumber() + Emojis.Phone;
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile());
-            tourAppBot.Execute(SendMessage.builder().chatId(item.getMyUser().getChatId()).text(text).replyMarkup(getAcceptButtons(item.getId())).build());
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId()));
+//            tourAppBot.Execute(SendMessage.builder().chatId(item.getMyUser().getChatId()).text(text).replyMarkup(getAcceptButtons(item.getId())).build());
             userOfferRepo.deleteById(item.getId());
         }
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
@@ -73,13 +74,23 @@ public class OfferService {
 
     }
 
+    public UserOffer findById(Long offerId) {
+        return userOfferRepo.findById(offerId).get();
+    }
+
+    public void acceptOffer(Long offerId) {
+        System.out.println(offerId);
+        rabbitStopService.reply(offerId);
+    }
+
+
     @Transactional(propagation = Propagation.REQUIRED)
     public void clearUserOffer(Long userId, String uuid) {
 
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
             userOfferRepo.deleteAllByMyUserId(userId);
         }
-        if (uuid!=null){
+        if (uuid != null) {
             rabbitStopService.stop(uuid);
         }
     }

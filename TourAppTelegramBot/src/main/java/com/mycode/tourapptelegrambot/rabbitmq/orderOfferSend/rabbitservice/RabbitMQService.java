@@ -16,6 +16,9 @@ public class RabbitMQService {
         template.convertAndSend("orderExchange","orderKey",order);
     }
     public void stop(String uuid){
-        template.convertAndSend("orderExchange2","orderKey2",uuid);
+        template.convertAndSend("stopOrderExchange","stopOrderKey",uuid);
+    }
+    public void reply(Long offerId){
+        template.convertAndSend("offerReplyExchange","offerReplyKey",offerId);
     }
 }

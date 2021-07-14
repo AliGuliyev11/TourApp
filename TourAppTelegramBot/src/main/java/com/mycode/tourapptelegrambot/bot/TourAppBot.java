@@ -20,6 +20,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -108,7 +109,7 @@ public class TourAppBot extends TelegramWebhookBot {
     @SneakyThrows
     @PostConstruct
     public void botCommands() {
-        List<BotCommand> botCommands=new ArrayList<>();
+        List<BotCommand> botCommands = new ArrayList<>();
         botCommands.add(new StartCommand());
         botCommands.add(new NewCommand());
         botCommands.add(new ContinueCommand());
@@ -117,12 +118,14 @@ public class TourAppBot extends TelegramWebhookBot {
     }
 
     @SneakyThrows
-    public void sendOffer(String chatId, File image) {
+    public void sendOffer(String chatId, File image, String caption, InlineKeyboardMarkup acceptButtons) {
         SendPhoto sendPhoto = new SendPhoto();
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
         sendPhoto.setPhoto(inputFile);
         sendPhoto.setChatId(chatId);
+        sendPhoto.setCaption(caption);
+        sendPhoto.setReplyMarkup(acceptButtons);
         execute(sendPhoto);
     }
 

@@ -104,5 +104,17 @@ public class ValidationResponseMessages {
         return text;
     }
 
+    public static String getAcceptedMessage(Order userOrder) {
+        String text;
+        if (userOrder.getLanguage().name() == "AZ") {
+            text = "Bu təklifi qəbul elədiz.Sizinlə yaxın zamanda əlaqə saxlanılacaq.";
+        } else if (userOrder.getLanguage().name() == "RU") {
+            text = "Вы приняли это предложение. С вами свяжутся в ближайшее время.";
+        } else {
+            text = "You have accepted this offer. You will be contacted soon.";
+        }
+        return text;
+    }
+
 
 }

@@ -35,25 +35,36 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue rabbitQueue2(){
-        Queue orderQueue = new Queue("orderQueue2", true);
+    Queue stopRabbitQueue(){
+        Queue orderQueue = new Queue("stopOrderQueue", true);
         return orderQueue;
     }
 
     @Bean
-    DirectExchange rabbitExchange2(){
-        return new DirectExchange("orderExchange2");
+    DirectExchange stopRabbitExchange(){
+        return new DirectExchange("stopOrderExchange");
     }
 
     @Bean
-    Binding bind2(@Qualifier("rabbitQueue2") Queue queue, @Qualifier("rabbitExchange2") DirectExchange exchange){
-        return BindingBuilder.bind(queue).to(exchange).with("orderKey2");
+    Binding stopBind(@Qualifier("stopRabbitQueue") Queue queue, @Qualifier("stopRabbitExchange") DirectExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("stopOrderKey");
+    }
+
+
+    @Bean
+    Queue offerReplyQueue(){
+        Queue orderQueue = new Queue("offerReplyQueue", true);
+        return orderQueue;
     }
 
     @Bean
-    MessageConverter messageConverter2(){
-        return new Jackson2JsonMessageConverter();
+    DirectExchange offerReplyRabbitExchange(){
+        return new DirectExchange("offerReplyExchange");
     }
 
+    @Bean
+    Binding offerReplyBind(@Qualifier("offerReplyQueue") Queue queue, @Qualifier("offerReplyRabbitExchange") DirectExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("offerReplyKey");
+    }
 
 }

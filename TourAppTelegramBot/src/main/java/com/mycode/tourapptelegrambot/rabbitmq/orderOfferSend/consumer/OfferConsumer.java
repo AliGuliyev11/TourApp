@@ -44,7 +44,7 @@ public class OfferConsumer {
             int count = offerCache.get(user.getId());
             count++;
             if (count == 6) {
-                offerService.save(offer, user);
+                offerService.save(offer, user,false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("A").replyMarkup(getLoadButtons()).build());
             } else if (count < 6) {
 
@@ -58,11 +58,10 @@ public class OfferConsumer {
                 String text = "Agent:" + offer.getAgencyName() + "\n" + offer.getAgencyNumber() + Emojis.Phone;
                 sendPhoto.setCaption(text);
                 telegramBot.execute(sendPhoto);
-//                telegramBot.execute(new SendMessage().setChatId(user.getChatId()).setText(text).setReplyMarkup(getAcceptButtons(offer.getId())));
-//                offerService.save(offer, user);
+                offerService.save(offer, user,true);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
             } else {
-                offerService.save(offer, user);
+                offerService.save(offer, user,false);
             }
             offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
 

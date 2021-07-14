@@ -25,4 +25,5 @@ public class UserOffer {
     String agencyNumber;
     @ManyToOne
     MyUser myUser;
+    boolean isFirstFive;
 }

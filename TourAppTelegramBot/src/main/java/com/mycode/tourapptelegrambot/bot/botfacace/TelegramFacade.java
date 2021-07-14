@@ -125,8 +125,9 @@ public class TelegramFacade {
             log.info("New message from User:{}, chatId: {},  with text: {}",
                     message.getFrom().getUserName(), message.getChatId(), message.getText());
             if (!message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
-                    messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
-                    !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()) {
+                    (messageBoolCache.get(update.getMessage().getFrom().getId()) == null || messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
+                            !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()
+                    )) {
                 telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
                 return SendMessage.builder().chatId(String.valueOf(message.getChatId())).text("").build();
             }
@@ -311,7 +312,7 @@ public class TelegramFacade {
             callBackAnswer = offerService.loadMore(userId, chatId);
             callBackAnswer.add(DeleteMessage.builder().chatId(String.valueOf(chatId)).messageId(messageId).build());
         } else if (buttonQuery.getData().startsWith("Offer")) {
-
+            callBackAnswer = acceptOffer(buttonQuery,userOrder);
         } else {
             Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
             callBackAnswer = getDateCallbackAnswer(buttonQuery, userOrder, userId, chatId, messageId, question);
@@ -320,6 +321,17 @@ public class TelegramFacade {
         orderCache.save(CurrentOrder.builder().userId(userId).order(userOrder).build());
         System.out.println(userOrder);
 
+        return callBackAnswer;
+    }
+
+    private List<BotApiMethod<?>> acceptOffer(CallbackQuery buttonQuery,Order userOrder) {
+        List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
+        String chatId= String.valueOf(buttonQuery.getMessage().getChatId());
+        Integer messageId=buttonQuery.getMessage().getMessageId();
+        Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
+        offerService.acceptOffer(offerId);
+        callBackAnswer.add(sendAnswerCallbackQuery(getAcceptedMessage(userOrder), buttonQuery));
+        callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         return callBackAnswer;
     }
 

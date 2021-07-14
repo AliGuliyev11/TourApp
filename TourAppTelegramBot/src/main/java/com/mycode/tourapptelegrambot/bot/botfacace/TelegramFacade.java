@@ -247,9 +247,9 @@ public class TelegramFacade {
         offerCache.delete(userId);
         calendarCache.delete(userId);
         MyUser myUser = userRepo.findById(userId).get();
-        String uuid=null;
+        String uuid = null;
         if (myUser != null) {
-            uuid=myUser.getUuid();
+            uuid = myUser.getUuid();
             myUser.setUuid(UUID.randomUUID().toString());
             userRepo.save(myUser);
         }
@@ -310,6 +310,8 @@ public class TelegramFacade {
         } else if (buttonQuery.getData().equals("loadMore")) {
             callBackAnswer = offerService.loadMore(userId, chatId);
             callBackAnswer.add(new DeleteMessage().setChatId(chatId).setMessageId(messageId));
+        } else if (buttonQuery.getData().startsWith("Offer")) {
+
         } else {
             Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
             callBackAnswer = getDateCallbackAnswer(buttonQuery, userOrder, userId, chatId, messageId, question);

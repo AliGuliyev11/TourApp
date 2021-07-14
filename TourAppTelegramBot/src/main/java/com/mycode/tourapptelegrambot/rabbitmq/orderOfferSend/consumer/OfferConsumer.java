@@ -1,4 +1,4 @@
-package com.mycode.tourapptelegrambot.rabbitmq.consumer;
+package com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.consumer;
 
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.Offer;
@@ -49,7 +49,7 @@ public class OfferConsumer {
                 String text="Agent:" + offer.getAgencyName() + "\n" + offer.getAgencyNumber() + Emojis.Phone;
                 telegramBot.execute(sendPhoto);
                 telegramBot.execute(new SendMessage().setChatId(user.getChatId()).setText(text).setReplyMarkup(getAcceptButtons(offer.getId())));
-                offerService.save(offer, user);
+//                offerService.save(offer, user);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
             } else {
                 offerService.save(offer, user);

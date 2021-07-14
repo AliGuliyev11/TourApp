@@ -79,7 +79,7 @@ public class TelegramFacade {
                           QuestionRepo question, QuestionActionRepo questionActionRepo, QuestionIdAndNextCache questionIdAndNextCache,
                           CalendarCache calendarCache, ButtonAndMessageCache buttonTypeAndMessage, MessageBoolCache messageBoolCache,
                           BotStateCache botStateCache, OrderCache orderCache, LocaleMessageService service, UserRepo userRepo,
-                          OfferCache offer,OfferService offerService) {
+                          OfferCache offer, OfferService offerService) {
         this.telegramBot = telegramBot;
         this.botStateContext = botStateContext;
         this.questionRepo = question;
@@ -92,8 +92,8 @@ public class TelegramFacade {
         this.orderCache = orderCache;
         this.messageService = service;
         this.userRepo = userRepo;
-        this.offerCache=offer;
-        this.offerService=offerService;
+        this.offerCache = offer;
+        this.offerService = offerService;
     }
 
     /**
@@ -240,7 +240,6 @@ public class TelegramFacade {
      */
 
     public void clearCache(int userId) {
-        orderCache.delete(userId);
         botStateCache.delete(userId);
         buttonTypeAndMessage.delete(userId);
         messageBoolCache.delete(userId);
@@ -248,18 +247,22 @@ public class TelegramFacade {
         offerCache.delete(userId);
         calendarCache.delete(userId);
         MyUser myUser = userRepo.findById(userId).get();
+        String uuid=null;
         if (myUser != null) {
+            uuid=myUser.getUuid();
             myUser.setUuid(UUID.randomUUID().toString());
             userRepo.save(myUser);
         }
+        orderCache.delete(userId);
+        offerService.clearUserOffer(userId, uuid);
     }
 
     @Value("${startCase.photoPath}")
     String photoPath;
 
     /**
-     * When user inout is /start program first sends photo
-     * Then ask language
+     * When user input is /start program first sends photo
+     * Then asks language
      */
 
     @SneakyThrows
@@ -304,10 +307,10 @@ public class TelegramFacade {
             findCallback(buttonQuery, userOrder, questionIdAndNextCache.get(userId));
             callBackAnswer = getOrderCallbackAnswer(buttonTypeAndMessage.get(userId), userId, chatId, messageId, question);
 
-        }else if(buttonQuery.getData().equals("loadMore")){
-            callBackAnswer=offerService.loadMore(userId,chatId);
-        }
-        else {
+        } else if (buttonQuery.getData().equals("loadMore")) {
+            callBackAnswer = offerService.loadMore(userId, chatId);
+            callBackAnswer.add(new DeleteMessage().setChatId(chatId).setMessageId(messageId));
+        } else {
             Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
             callBackAnswer = getDateCallbackAnswer(buttonQuery, userOrder, userId, chatId, messageId, question);
         }
@@ -337,7 +340,6 @@ public class TelegramFacade {
 
     /**
      * This method for order callback answer
-     * <p>
      * processCallbackQuery's 2nd if statement
      */
 

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class OfferCache {
-    public static final String HASH_KEY = "OfferCount";
+    public static final String HASH_KEY = "OfferCache";
     private RedisTemplate template;
 
     public OfferCache(RedisTemplate template) {
@@ -21,7 +21,7 @@ public class OfferCache {
         template.opsForHash().put(HASH_KEY,offerCount.getUserId(),offerCount);
     }
 
-    public Integer get(int userId){
+    public Integer get(Long userId){
         OfferCount count= (OfferCount) template.opsForHash().get(HASH_KEY,userId);
         if (count==null){
             return 0;
@@ -30,7 +30,7 @@ public class OfferCache {
     }
 
 
-    public void delete(int userId){
+    public void delete(Long userId){
         if (get(userId)!=null){
             template.opsForHash().delete(HASH_KEY,userId);
         }

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface UserOfferRepo extends JpaRepository<UserOffer, Long> {
-    List<UserOffer> getUserOffersByMyUserId(int userId);
+    List<UserOffer> getUserOffersByMyUserId(Long userId);
 
-    void deleteAllByMyUserId(int userId);
+    void deleteAllByMyUserId(Long userId);
 }

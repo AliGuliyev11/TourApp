@@ -11,9 +11,9 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("CalendarTime")
+@RedisHash("CalendarCache")
 public class CalendarTime implements Serializable {
     @Id
-    int userId;
+    Long userId;
     Integer time;
 }

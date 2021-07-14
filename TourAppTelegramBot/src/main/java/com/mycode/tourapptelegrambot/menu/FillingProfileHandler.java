@@ -93,8 +93,8 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     public SendMessage processUsersInput(Message inputMsg) {
         String usersAnswer = inputMsg.getText();
-        int userId = inputMsg.getFrom().getId();
-        long chatId = inputMsg.getChatId();
+        Long userId = inputMsg.getFrom().getId();
+        String chatId = String.valueOf(inputMsg.getChatId());
         int messageId = inputMsg.getMessageId();
         String regex = questionIdAndNextCache.get(userId).getRegex();
         Order userOrder = orderCache.get(userId);
@@ -103,7 +103,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         return getReplyForBotState(botState, userId, chatId, messageId, usersAnswer, regex, userOrder, inputMsg);
     }
 
-    private SendMessage getReplyForBotState(BotState botState, int userId, long chatId, int messageId, String usersAnswer,
+    private SendMessage getReplyForBotState(BotState botState, Long userId, String chatId, int messageId, String usersAnswer,
                                             String regex, Order userOrder, Message inputMsg) {
         SendMessage replyToUser = null;
         if (botState.equals(BotState.VALIDATION)) {
@@ -133,7 +133,7 @@ public class FillingProfileHandler implements InputMessageHandler {
     }
 
 
-    private SendMessage replyQuestionNull(int userId, long chatId, Order userOrder) {
+    private SendMessage replyQuestionNull(Long userId, String chatId, Order userOrder) {
         SendMessage sendMessage = new SendMessage(chatId, sendEndingMessage(userOrder));
         userOrder.setCreatedDate(new Date());
         Calendar calendar = Calendar.getInstance();
@@ -146,7 +146,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         return sendMessage;
     }
 
-    private SendMessage replyQuestionNotNull(int userId, long chatId, int messageId, Question question, Order userOrder) {
+    private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, Order userOrder) {
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
                 questionIdAndNextCache, question, buttonMessageCache, messageBoolCache);
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.Free_Text)
@@ -161,7 +161,7 @@ public class FillingProfileHandler implements InputMessageHandler {
      * When last answered correctly clear @Redis cache
      */
 
-    private void deleteCache(int userId) {
+    private void deleteCache(Long userId) {
         botStateCache.delete(userId);
         buttonMessageCache.delete(userId);
         messageBoolCache.delete(userId);
@@ -182,7 +182,7 @@ public class FillingProfileHandler implements InputMessageHandler {
      * UserId-For @Redis cache
      */
 
-    private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, int userId) {
+    private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, Long userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
         for (var item : question.getQuestionActions()) {
             questionIdAndNext.setPrev(item.getQuestion().getId());
@@ -202,7 +202,7 @@ public class FillingProfileHandler implements InputMessageHandler {
      */
 
     @SneakyThrows
-    private SendMessage mapToObject(int userId, Order userOrder, String userAnswer) {
+    private SendMessage mapToObject(Long userId, Order userOrder, String userAnswer) {
 
         QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
         Class<?> order = userOrder.getClass();

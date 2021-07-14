@@ -14,7 +14,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class MyUser {
     @Id
-    int id;
-    Long chatId;
+    Long id;
+    String chatId;
     String uuid;
 }

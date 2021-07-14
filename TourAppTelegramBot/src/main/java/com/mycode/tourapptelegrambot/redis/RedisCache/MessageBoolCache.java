@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class MessageBoolCache {
-    public static final String HASH_KEY = "MessageAndBoolean";
+    public static final String HASH_KEY = "MessageCache";
     private RedisTemplate template;
 
     public MessageBoolCache(RedisTemplate template) {
@@ -20,12 +20,12 @@ public class MessageBoolCache {
         template.opsForHash().put(HASH_KEY,messageAndBoolean.getUserId(),messageAndBoolean);
     }
 
-    public MessageAndBoolean get(int userId){
+    public MessageAndBoolean get(Long userId){
         return (MessageAndBoolean) template.opsForHash().get(HASH_KEY,userId);
     }
 
 
-    public void delete(int userId){
+    public void delete(Long userId){
         if (get(userId)!=null){
             template.opsForHash().delete(HASH_KEY,userId);
         }

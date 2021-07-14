@@ -105,7 +105,6 @@ public class TelegramFacade {
 
         SendMessage replyMessage = null;
 
-
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             log.info("New callbackQuery from User: {}, userId: {}, with data: {}", update.getCallbackQuery().getFrom().getUserName(),
@@ -117,8 +116,9 @@ public class TelegramFacade {
         Message message = update.getMessage();
 
         if (message != null && !message.hasText()) {
-            telegramBot.execute(new DeleteMessage().setChatId(message.getChatId()).setMessageId(message.getMessageId()));
-            return new SendMessage().setChatId(message.getChatId()).setText("");
+
+            telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
+            return SendMessage.builder().chatId(String.valueOf(message.getChatId())).text("").build();
         }
 
         if (message != null && message.hasText()) {
@@ -127,8 +127,8 @@ public class TelegramFacade {
             if (!message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
                     messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                     !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()) {
-                telegramBot.execute(new DeleteMessage().setChatId(message.getChatId()).setMessageId(message.getMessageId()));
-                return new SendMessage().setChatId(message.getChatId()).setText("");
+                telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
+                return SendMessage.builder().chatId(String.valueOf(message.getChatId())).text("").build();
             }
             replyMessage = handleInputMessage(message);
         }
@@ -169,11 +169,11 @@ public class TelegramFacade {
         SpeechRecognitionResults speechRecognitionResults =
                 speechToText.recognize(recognizeOptions).execute().getResult();
         if (speechRecognitionResults.getResults().isEmpty()) {
-            return new SendMessage().setChatId(chatId).setText(errorMessage);
+            return SendMessage.builder().chatId(String.valueOf(chatId)).text(errorMessage).build();
         } else {
             List<SpeechRecognitionResult> resultsList = speechRecognitionResults.getResults().stream().filter(SpeechRecognitionResult::isXFinal).collect(Collectors.toList());
             String a = resultsList.get(0).getAlternatives().get(0).getTranscript();
-            return new SendMessage().setChatId(chatId).setText(a);
+            return SendMessage.builder().chatId(String.valueOf(chatId)).text(a).build();
         }
     }
 
@@ -186,24 +186,24 @@ public class TelegramFacade {
     private SendMessage handleInputMessage(Message message) {
 
         String inputMsg = message.getText().toLowerCase();
-        int userId = message.getFrom().getId();
-        Long chatId = message.getChatId();
+        Long userId = message.getFrom().getId();
+        String chatId = String.valueOf(message.getChatId());
         BotState botState = null;
         SendMessage replyMessage;
         switch (inputMsg) {
             case "/new":
             case "/start":
                 if (orderCache.get(userId).getLanguage() != null) {
-                    replyMessage = new SendMessage(chatId, getStartCacheMessage(orderCache.get(userId))).setParseMode("HTML");
+                    replyMessage = SendMessage.builder().chatId(chatId).text(getStartCacheMessage(orderCache.get(userId))).parseMode("HTML").build();
                 } else {
                     replyMessage = startCase(userId, chatId);
                     botState = BotState.FILLING_TOUR;
                 }
                 break;
             case "/stop":
-                telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
+                telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
                 clearCache(userId);
-                replyMessage = new SendMessage(chatId, getStopContinueCacheMessage()).setParseMode("HTML");
+                replyMessage = SendMessage.builder().chatId(chatId).text(getStopContinueCacheMessage()).parseMode("HTML").build();
                 break;
             case "/continue":
                 if (buttonTypeAndMessage.get(userId) != null) {
@@ -213,16 +213,16 @@ public class TelegramFacade {
                     botState = BotState.FILLING_TOUR;
                 } else {
                     if (orderCache.get(userId).getLanguage() == null) {
-                        replyMessage = new SendMessage(chatId, getStopContinueCacheMessage()).setParseMode("HTML");
+                        replyMessage = SendMessage.builder().chatId(chatId).text(getStopContinueCacheMessage()).parseMode("HTML").build();
                     } else {
-                        replyMessage = new SendMessage(chatId, getContinueMessage(orderCache.get(userId))).setParseMode("HTML");
+                        replyMessage = SendMessage.builder().chatId(chatId).text(getContinueMessage(orderCache.get(userId))).parseMode("HTML").build();
                     }
                 }
 
                 break;
             default:
                 if (buttonTypeAndMessage.get(userId) == null) {
-                    replyMessage = new SendMessage(chatId, getDefaultCacheMessage(orderCache.get(userId))).setParseMode("HTML");
+                    replyMessage = SendMessage.builder().chatId(chatId).text(getDefaultCacheMessage(orderCache.get(userId))).parseMode("HTML").build();
                 } else {
                     botState = botStateCache.get(userId).getBotState();
                     replyMessage = botStateContext.processInputMessage(botState, message);
@@ -231,7 +231,7 @@ public class TelegramFacade {
         }
 
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(botState).build());
-        telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
+        telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
         return replyMessage;
     }
 
@@ -239,7 +239,7 @@ public class TelegramFacade {
      * When user input is /stop program clear cache
      */
 
-    public void clearCache(int userId) {
+    public void clearCache(Long userId) {
         botStateCache.delete(userId);
         buttonTypeAndMessage.delete(userId);
         messageBoolCache.delete(userId);
@@ -266,14 +266,14 @@ public class TelegramFacade {
      */
 
     @SneakyThrows
-    private SendMessage startCase(int userId, Long chatId) {
-        telegramBot.execute(new SendChatAction().setAction(ActionType.TYPING).setChatId(chatId));
+    private SendMessage startCase(Long userId, String chatId) {
+        telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
         telegramBot.sendPhoto(chatId, messageService.getMessage("startCase.firstMessage") + Emojis.Beach, photoPath);
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
         String uuid = UUID.randomUUID().toString();
         orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(uuid).chatId(chatId).build()).build());
-        SendMessage sendMessage = new SendMessage(chatId, messageService.getMessage("startCase.askLang")).setReplyMarkup(getLanguageButtons());
-        sendMessage.setParseMode("HTML");
+        SendMessage sendMessage = SendMessage.builder().chatId(chatId).text(messageService.getMessage("startCase.askLang"))
+                .replyMarkup(getLanguageButtons()).parseMode("HTML").build();
         userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
         return sendMessage;
     }
@@ -287,8 +287,8 @@ public class TelegramFacade {
      */
 
     private List<BotApiMethod<?>> processCallbackQuery(CallbackQuery buttonQuery) {
-        final long chatId = buttonQuery.getMessage().getChatId();
-        final int userId = buttonQuery.getFrom().getId();
+        final String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
+        final Long userId = buttonQuery.getFrom().getId();
         final int messageId = buttonQuery.getMessage().getMessageId();
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
         Order userOrder = orderCache.get(userId);
@@ -309,7 +309,7 @@ public class TelegramFacade {
 
         } else if (buttonQuery.getData().equals("loadMore")) {
             callBackAnswer = offerService.loadMore(userId, chatId);
-            callBackAnswer.add(new DeleteMessage().setChatId(chatId).setMessageId(messageId));
+            callBackAnswer.add(DeleteMessage.builder().chatId(String.valueOf(chatId)).messageId(messageId).build());
         } else if (buttonQuery.getData().startsWith("Offer")) {
 
         } else {
@@ -329,7 +329,7 @@ public class TelegramFacade {
      * processCallbackQuery's else statement
      */
 
-    private List<BotApiMethod<?>> getDateCallbackAnswer(CallbackQuery buttonQuery, Order userOrder, int userId, long chatId,
+    private List<BotApiMethod<?>> getDateCallbackAnswer(CallbackQuery buttonQuery, Order userOrder, Long userId, String chatId,
                                                         int messageId, Question question) {
         List<BotApiMethod<?>> callBackAnswer = getDateTime(buttonQuery, userOrder);
         if (callBackAnswer.contains(null)) {
@@ -345,20 +345,20 @@ public class TelegramFacade {
      * processCallbackQuery's 2nd if statement
      */
 
-    private List<BotApiMethod<?>> getOrderCallbackAnswer(CurrentButtonTypeAndMessage currentButtonTypeAndMessage, int userId,
-                                                         long chatId, int messageId, Question question) {
+    private List<BotApiMethod<?>> getOrderCallbackAnswer(CurrentButtonTypeAndMessage currentButtonTypeAndMessage, Long userId,
+                                                         String chatId, int messageId, Question question) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
 
-        callBackAnswer.add(new SendMessage(chatId, "<b>" + currentButtonTypeAndMessage.getMessage() + "</b>").setParseMode("HTML"));
+        callBackAnswer.add(SendMessage.builder().chatId(chatId).text("<b>" + currentButtonTypeAndMessage.getMessage() + "</b>").parseMode("HTML").build());
 
         if (currentButtonTypeAndMessage.getQuestionType().equals(QuestionType.Button)) {
             callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
                     question, buttonTypeAndMessage, messageBoolCache));
-            callBackAnswer.add(new EditMessageReplyMarkup().setChatId(chatId).setMessageId(messageId).setReplyMarkup(null));
+            callBackAnswer.add(EditMessageReplyMarkup.builder().chatId(chatId).messageId(messageId).replyMarkup(null).build());
 
         } else {
 
-            callBackAnswer.add(new DeleteMessage().setChatId(chatId).setMessageId(messageId));
+            callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
             botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         }
         return callBackAnswer;
@@ -369,14 +369,15 @@ public class TelegramFacade {
      * processCallbackQuery's 1st if  statement
      */
 
-    private List<BotApiMethod<?>> getLanguageCallbackAnswer(int userId, long chatId, int messageId, CallbackQuery buttonQuery, Order userOrder) {
+    private List<BotApiMethod<?>> getLanguageCallbackAnswer(Long userId, String chatId, int messageId, CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
 
         callBackAnswer.add(getLanguageType(buttonQuery, userOrder));
-        callBackAnswer.add(new SendMessage(chatId, userOrder.getLanguage().name()));
+        callBackAnswer.add(new SendMessage(String.valueOf(chatId), userOrder.getLanguage().name()));
         callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
                 questionRepo.getFirstQuestionByLanguage(userOrder.getLanguage().name()), buttonTypeAndMessage, messageBoolCache));
-        callBackAnswer.add(new EditMessageReplyMarkup().setChatId(chatId).setMessageId(messageId).setReplyMarkup(null));
+
+        callBackAnswer.add(EditMessageReplyMarkup.builder().chatId(String.valueOf(chatId)).messageId(messageId).replyMarkup(null).build());
         return callBackAnswer;
     }
 
@@ -398,10 +399,11 @@ public class TelegramFacade {
             if (answer != null) {
                 callBackAnswer.add(answer);
             } else {
-                callBackAnswer.add(new DeleteMessage().setChatId(buttonQuery.getMessage().getChatId()).setMessageId(buttonQuery.getMessage().getMessageId()));
-                callBackAnswer.add(new SendMessage(buttonQuery.getMessage().getChatId(),
-                        "<b>" + buttonTypeAndMessage.get(buttonQuery.getFrom().getId()).getMessage() + "</b>")
-                        .setParseMode("HTML"));
+
+                callBackAnswer.add(DeleteMessage.builder().chatId(String.valueOf(buttonQuery.getMessage().getChatId()))
+                        .messageId(buttonQuery.getMessage().getMessageId()).build());
+                callBackAnswer.add(SendMessage.builder().chatId(String.valueOf(buttonQuery.getMessage().getChatId()))
+                        .text("<b>" + buttonTypeAndMessage.get(buttonQuery.getFrom().getId()).getMessage() + "</b>").parseMode("HTML").build());
                 callBackAnswer.add(null);
             }
             calendarCache.delete(buttonQuery.getFrom().getId());
@@ -416,12 +418,15 @@ public class TelegramFacade {
      */
 
     private List<BotApiMethod<?>> getNextCalendar(int time, CallbackQuery buttonQuery) {
+        final Long userId = buttonQuery.getFrom().getId();
+        final String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
+        final int messageId = buttonQuery.getMessage().getMessageId();
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
         time++;
-        calendarCache.save(CalendarTime.builder().userId(buttonQuery.getFrom().getId()).time(time).build());
-        callBackAnswer.add(new DeleteMessage().setChatId(buttonQuery.getMessage().getChatId()).setMessageId(buttonQuery.getMessage().getMessageId()));
-        callBackAnswer.add(new SendMessage().setChatId(buttonQuery.getMessage().getChatId()).setText("Calendar" + Emojis.Clock).
-                setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))));
+        calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
+        callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
+        callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
+                .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))).build());
         return callBackAnswer;
     }
 
@@ -432,14 +437,19 @@ public class TelegramFacade {
 
     private List<BotApiMethod<?>> getPrevCalendar(int time, CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
+        final Long userId = buttonQuery.getFrom().getId();
+        final String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
+        final int messageId = buttonQuery.getMessage().getMessageId();
         if (time == 0) {
             callBackAnswer.add(sendAnswerCallbackQuery(getPrevCalendarMessage(userOrder), buttonQuery));
         } else {
             time--;
-            calendarCache.save(CalendarTime.builder().userId(buttonQuery.getFrom().getId()).time(time).build());
-            callBackAnswer.add(new SendMessage().setChatId(buttonQuery.getMessage().getChatId()).setText("Calendar" + Emojis.Clock).
-                    setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))));
-            callBackAnswer.add(new DeleteMessage().setChatId(buttonQuery.getMessage().getChatId()).setMessageId(buttonQuery.getMessage().getMessageId()));
+            calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
+
+            callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
+                    .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))).build());
+
+            callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         }
         return callBackAnswer;
     }
@@ -453,7 +463,7 @@ public class TelegramFacade {
 
     @SneakyThrows
     private BotApiMethod<?> findCallback(CallbackQuery buttonQuery, Order userOrder, QuestionIdAndNext questionIdAndNext) {
-        final int userId = buttonQuery.getFrom().getId();
+        final Long userId = buttonQuery.getFrom().getId();
         List<QuestionAction> questionActions = questionActionRepo.findQuestionActionsByNext(questionIdAndNext.getNext());
         Class<?> order = userOrder.getClass();
         for (var item : questionActions) {
@@ -484,7 +494,7 @@ public class TelegramFacade {
      */
 
     @SneakyThrows
-    private BotApiMethod<?> setCalendarField(CallbackQuery buttonQuery, Field field, int userId, QuestionType type, Order userOrder) {
+    private BotApiMethod<?> setCalendarField(CallbackQuery buttonQuery, Field field, Long userId, QuestionType type, Order userOrder) {
         Object text = buttonQuery.getData();
         LocalDate localDate = getLocaleDate(text.toString());
         if (localDate.isBefore(LocalDate.now())) {
@@ -505,7 +515,7 @@ public class TelegramFacade {
 
     @SneakyThrows
     private void setButtonTypeDataToOrder(QuestionAction questionAction, Class<?> type, Field field,
-                                          Order userOrder, int userId, QuestionType questionType) {
+                                          Order userOrder, Long userId, QuestionType questionType) {
         Object text = questionAction.getText();
 
         if (isPrimitive(type)) {
@@ -537,7 +547,7 @@ public class TelegramFacade {
 
     private BotApiMethod<?> getLanguageType(CallbackQuery buttonQuery, Order userOrder) {
 
-        final int userId = buttonQuery.getFrom().getId();
+        final Long userId = buttonQuery.getFrom().getId();
 
         switch (buttonQuery.getData()) {
             case "LangButtonAz":

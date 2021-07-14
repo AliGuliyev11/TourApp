@@ -7,8 +7,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import java.util.ArrayList;
 import java.util.List;
 
-/** This class for just /start case
- * When user send /start message program enters this method for creating language inline keyboard button */
+/**
+ * This class for just /start case
+ * When user send /start message program enters this method for creating language inline keyboard button
+ */
 
 public class AskLanguage {
 
@@ -16,9 +18,12 @@ public class AskLanguage {
     public static InlineKeyboardMarkup getLanguageButtons() {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        InlineKeyboardButton buttonAz = new InlineKeyboardButton().setText("AZ" + Emojis.Azerbaijan);
-        InlineKeyboardButton buttonRu = new InlineKeyboardButton().setText("RU" + Emojis.Russian);
-        InlineKeyboardButton buttonEn = new InlineKeyboardButton().setText("EN" + Emojis.English);
+        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
+        buttonAz.setText("AZ" + Emojis.Azerbaijan);
+        InlineKeyboardButton buttonRu = new InlineKeyboardButton();
+        buttonRu.setText("RU" + Emojis.Russian);
+        InlineKeyboardButton buttonEn = new InlineKeyboardButton();
+        buttonEn.setText("EN" + Emojis.English);
 
         buttonAz.setCallbackData("LangButtonAz");
         buttonRu.setCallbackData("LangButtonRu");
@@ -33,7 +38,6 @@ public class AskLanguage {
         rowList.add(keyboardButtonsRow1);
 
         inlineKeyboardMarkup.setKeyboard(rowList);
-
 
 
         return inlineKeyboardMarkup;

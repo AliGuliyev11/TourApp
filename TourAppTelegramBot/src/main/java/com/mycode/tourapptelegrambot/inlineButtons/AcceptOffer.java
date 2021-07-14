@@ -12,9 +12,10 @@ public class AcceptOffer {
     public static InlineKeyboardMarkup getAcceptButtons(Long offerId) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        InlineKeyboardButton buttonAz = new InlineKeyboardButton().setText("Yes");
+        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
+        buttonAz.setText("Yes");
 
-        buttonAz.setCallbackData("Offer-"+offerId);
+        buttonAz.setCallbackData("Offer-" + offerId);
 
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
         keyboardButtonsRow1.add(buttonAz);
@@ -23,7 +24,6 @@ public class AcceptOffer {
         rowList.add(keyboardButtonsRow1);
 
         inlineKeyboardMarkup.setKeyboard(rowList);
-
 
 
         return inlineKeyboardMarkup;

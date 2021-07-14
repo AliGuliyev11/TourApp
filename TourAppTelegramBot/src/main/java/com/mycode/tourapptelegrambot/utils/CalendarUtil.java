@@ -57,7 +57,7 @@ public class CalendarUtil {
     }
 
     private InlineKeyboardButton createButton(String callBack, String text) {
-        return new InlineKeyboardButton().setCallbackData(callBack).setText(text);
+        return InlineKeyboardButton.builder().callbackData(callBack).text(text).build();
     }
 
     private List<InlineKeyboardButton> buildRow(LocalDate date, int shift) {

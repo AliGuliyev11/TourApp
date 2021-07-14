@@ -12,9 +12,9 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("TelegramOrder")
+@RedisHash("TelegramOrderCache")
 public class CurrentOrder implements Serializable {
     @Id
-    int userId;
+    Long userId;
     Order order;
 }

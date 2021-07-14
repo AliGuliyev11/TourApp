@@ -25,12 +25,11 @@ import java.util.List;
 public class UniversalInlineButtons {
 
 
-    public SendMessage sendInlineKeyBoardMessage(int userId, long chatId, int messageId, QuestionIdAndNextCache cache,
+    public SendMessage sendInlineKeyBoardMessage(Long userId, String chatId, int messageId, QuestionIdAndNextCache cache,
                                                  Question question, ButtonAndMessageCache buttonAndMessageCache,
                                                  MessageBoolCache messageBoolCache) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setText(question.getQuestion());
-        sendMessage.setChatId(chatId);
+        SendMessage sendMessage = SendMessage.builder().text(question.getQuestion()).chatId(chatId).build();
+
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
@@ -49,7 +48,8 @@ public class UniversalInlineButtons {
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
-                return sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
+                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
+                return sendMessage;
             }
         }
 
@@ -66,8 +66,7 @@ public class UniversalInlineButtons {
 
     private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword, Long id) {
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        InlineKeyboardButton keyboardButton = new InlineKeyboardButton().setText(text);
-        keyboardButton.setCallbackData(keyword + id);
+        InlineKeyboardButton keyboardButton = InlineKeyboardButton.builder().text(text).callbackData(keyword+id).build();
         keyboardButtonsRow1.add(keyboardButton);
         return keyboardButtonsRow1;
     }

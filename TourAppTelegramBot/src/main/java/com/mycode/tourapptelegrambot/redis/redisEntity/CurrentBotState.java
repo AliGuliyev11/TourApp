@@ -12,9 +12,9 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("CurrentBotState")
+@RedisHash("BotStateCache")
 public class CurrentBotState implements Serializable {
     @Id
-    int userId;
+    Long userId;
     BotState botState;
 }

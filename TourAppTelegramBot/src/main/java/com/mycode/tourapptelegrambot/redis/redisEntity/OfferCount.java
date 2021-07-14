@@ -11,9 +11,9 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("OfferCount")
+@RedisHash("OfferCache")
 public class OfferCount implements Serializable {
     @Id
-    int userId;
+    Long userId;
     Integer count;
 }

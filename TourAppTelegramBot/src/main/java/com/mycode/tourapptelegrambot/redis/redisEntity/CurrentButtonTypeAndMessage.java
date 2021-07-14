@@ -12,10 +12,10 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("CurrentButtonTypeAndMessage")
+@RedisHash("CurrentButtonTypeAndMessageCache")
 public class CurrentButtonTypeAndMessage implements Serializable {
     @Id
-    private int userId;
+    private Long userId;
     QuestionType questionType;
     String message;
 }

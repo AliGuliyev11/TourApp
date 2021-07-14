@@ -53,20 +53,20 @@ public class OfferService {
     }
 
     @SneakyThrows
-    public List<BotApiMethod<?>> loadMore(int userId, Long chatId) {
+    public List<BotApiMethod<?>> loadMore(Long userId, String chatId) {
         List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(5).collect(Collectors.toList());
         List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         for (UserOffer item : offers) {
             String text = "Agent:" + item.getAgencyName() + "\n" + item.getAgencyNumber() + Emojis.Phone;
             tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile());
-            tourAppBot.Execute(new SendMessage().setChatId(item.getMyUser().getChatId()).setText(text).setReplyMarkup(getAcceptButtons(item.getId())));
+            tourAppBot.Execute(SendMessage.builder().chatId(item.getMyUser().getChatId()).text(text).replyMarkup(getAcceptButtons(item.getId())).build());
             userOfferRepo.deleteById(item.getId());
         }
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
-            callbackAnswer.add(new SendMessage().setChatId(chatId).setText("A").setReplyMarkup(getLoadButtons()));
+            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("A").replyMarkup(getLoadButtons()).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
-            callbackAnswer.add(new SendMessage().setChatId(chatId).setText("B"));
+            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("B").build());
         }
 
         return callbackAnswer;
@@ -74,7 +74,7 @@ public class OfferService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void clearUserOffer(int userId, String uuid) {
+    public void clearUserOffer(Long userId, String uuid) {
 
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
             userOfferRepo.deleteAllByMyUserId(userId);

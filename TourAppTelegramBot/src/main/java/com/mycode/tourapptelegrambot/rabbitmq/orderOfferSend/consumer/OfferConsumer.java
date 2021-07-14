@@ -13,6 +13,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboard;
 
@@ -44,12 +45,17 @@ public class OfferConsumer {
             count++;
             if (count == 6) {
                 offerService.save(offer, user);
-                telegramBot.execute(new SendMessage().setChatId(user.getChatId()).setText("A").setReplyMarkup(getLoadButtons()));
+                telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("A").replyMarkup(getLoadButtons()).build());
             } else if (count < 6) {
-                SendPhoto sendPhoto = new SendPhoto().setPhoto(offer.getFile());
+
+
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
+
                 sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId()));
-                String text="Agent:" + offer.getAgencyName() + "\n" + offer.getAgencyNumber() + Emojis.Phone;
+
+                String text = "Agent:" + offer.getAgencyName() + "\n" + offer.getAgencyNumber() + Emojis.Phone;
                 sendPhoto.setCaption(text);
                 telegramBot.execute(sendPhoto);
 //                telegramBot.execute(new SendMessage().setChatId(user.getChatId()).setText(text).setReplyMarkup(getAcceptButtons(offer.getId())));

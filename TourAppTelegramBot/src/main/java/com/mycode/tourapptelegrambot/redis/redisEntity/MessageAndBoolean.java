@@ -12,12 +12,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Getter
 @Setter
-@RedisHash("MessageAndBoolean")
+@RedisHash("MessageCache")
 public class MessageAndBoolean implements Serializable {
 
     @Id
-    private int userId;
-//    SendMessage sendMessage;
+    private Long userId;
     Boolean send;
     int MessageId;
 }

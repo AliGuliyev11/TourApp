@@ -10,8 +10,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
-import org.telegram.telegrambots.meta.ApiContext;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
+import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+
+import javax.annotation.PostConstruct;
+//import org.telegram.telegrambots.meta.ApiContext;
+//import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
 
 @Setter
 @Getter
@@ -33,19 +36,20 @@ public class BotConfig {
     @Bean
     public TourAppBot tourAppBot(TelegramFacade telegramFacade) {
 
-        DefaultBotOptions options = ApiContext
-                .getInstance(DefaultBotOptions.class);
-        options.setProxyHost(proxyHost);
-        options.setProxyPort(proxyPort);
-        options.setProxyType(proxyType);
+//        DefaultBotOptions options = ApiContext
+//                .getInstance(DefaultBotOptions.class);
+//        options.setProxyHost(proxyHost);
+//        options.setProxyPort(proxyPort);
+//        options.setProxyType(proxyType);
 
-        TourAppBot tourAppBot = new TourAppBot(options,telegramFacade);
+        TourAppBot tourAppBot = new TourAppBot(telegramFacade);
         tourAppBot.setBotUsername(botUserName);
         tourAppBot.setBotToken(botToken);
         tourAppBot.setWebhookPath(webHookPath);
-
         return tourAppBot;
     }
+
+
 
     @Bean
     public MessageSource messageSource() {

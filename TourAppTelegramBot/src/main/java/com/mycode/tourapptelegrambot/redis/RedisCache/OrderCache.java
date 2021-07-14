@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class OrderCache {
-    public static final String HASH_KEY = "TelegramOrder";
+    public static final String HASH_KEY = "TelegramOrderCache";
     private RedisTemplate template;
 
     public OrderCache(RedisTemplate template) {
@@ -21,7 +21,7 @@ public class OrderCache {
         template.opsForHash().put(HASH_KEY,currentOrder.getUserId(),currentOrder);
     }
 
-    public Order get(int userId){
+    public Order get(Long userId){
         CurrentOrder currentOrder=(CurrentOrder) template.opsForHash().get(HASH_KEY,userId);
         if (currentOrder==null){
             return new Order();
@@ -30,7 +30,7 @@ public class OrderCache {
     }
 
 
-    public boolean checkOrder(int userId){
+    public boolean checkOrder(Long userId){
         CurrentOrder currentOrder=(CurrentOrder) template.opsForHash().get(HASH_KEY,userId);
         if (currentOrder==null){
             return false;
@@ -38,7 +38,7 @@ public class OrderCache {
         return true;
     }
 
-    public void delete(int userId){
+    public void delete(Long userId){
         if (get(userId)!=null){
             template.opsForHash().delete(HASH_KEY,userId);
         }

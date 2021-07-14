@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class BotStateCache {
-    public static final String HASH_KEY = "CurrentBotState";
+    public static final String HASH_KEY = "BotStateCache";
     private RedisTemplate template;
 
     public BotStateCache(RedisTemplate template) {
@@ -20,12 +20,12 @@ public class BotStateCache {
         template.opsForHash().put(HASH_KEY, botState.getUserId(), botState);
     }
 
-    public CurrentBotState get(int userId) {
+    public CurrentBotState get(Long userId) {
         return (CurrentBotState) template.opsForHash().get(HASH_KEY, userId);
     }
 
 
-    public void delete(int userId) {
+    public void delete(Long userId) {
         if (get(userId) != null) {
             template.opsForHash().delete(HASH_KEY, userId);
         }

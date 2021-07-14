@@ -39,7 +39,7 @@ public class Order implements Serializable {
     int Orderbudget;
     @Column(name = "travel_time")
     int Orderdateto;
-    Long chatId;
+    String chatId;
     String userId;
     Date createdDate;
     Date expiredDate;

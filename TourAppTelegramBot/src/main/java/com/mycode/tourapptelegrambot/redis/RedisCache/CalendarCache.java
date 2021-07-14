@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class CalendarCache {
-    public static final String HASH_KEY = "CalendarTime";
+    public static final String HASH_KEY = "CalendarCache";
     private RedisTemplate template;
 
     public CalendarCache(RedisTemplate template) {
@@ -21,7 +21,7 @@ public class CalendarCache {
         template.opsForHash().put(HASH_KEY,calendarTime.getUserId(),calendarTime);
     }
 
-    public Integer get(int userId){
+    public Integer get(Long userId){
         CalendarTime time= (CalendarTime) template.opsForHash().get(HASH_KEY,userId);
         if (time==null){
             return 0;
@@ -30,7 +30,7 @@ public class CalendarCache {
     }
 
 
-    public void delete(int userId){
+    public void delete(Long userId){
         if (get(userId)!=null){
             template.opsForHash().delete(HASH_KEY,userId);
         }

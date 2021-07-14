@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ButtonAndMessageCache {
-    public static final String HASH_KEY = "CurrentButtonTypeAndMessage";
+    public static final String HASH_KEY = "CurrentButtonTypeAndMessageCache";
     private RedisTemplate template;
 
     public ButtonAndMessageCache(RedisTemplate template) {
@@ -20,12 +20,12 @@ public class ButtonAndMessageCache {
         template.opsForHash().put(HASH_KEY,buttonTypeAndMessage.getUserId(),buttonTypeAndMessage);
     }
 
-    public CurrentButtonTypeAndMessage get(int userId){
+    public CurrentButtonTypeAndMessage get(Long userId){
         return (CurrentButtonTypeAndMessage) template.opsForHash().get(HASH_KEY,userId);
     }
 
 
-    public void delete(int userId){
+    public void delete(Long userId){
         if (get(userId)!=null){
             template.opsForHash().delete(HASH_KEY,userId);
         }

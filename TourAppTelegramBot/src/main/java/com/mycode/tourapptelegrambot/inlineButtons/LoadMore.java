@@ -11,7 +11,8 @@ public class LoadMore {
     public static InlineKeyboardMarkup getLoadButtons() {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        InlineKeyboardButton load = new InlineKeyboardButton().setText("Load More...");
+        InlineKeyboardButton load = new InlineKeyboardButton();
+        load.setText("Load More...");
 
         load.setCallbackData("loadMore");
 

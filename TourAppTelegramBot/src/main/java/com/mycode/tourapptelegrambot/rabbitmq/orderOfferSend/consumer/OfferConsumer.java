@@ -4,6 +4,7 @@ import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.Offer;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OfferCache;
+import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
 import com.mycode.tourapptelegrambot.services.OfferService;
@@ -25,12 +26,15 @@ public class OfferConsumer {
     private final UserRepo userRepo;
     private final OfferCache offerCache;
     private final OfferService offerService;
+    private final OrderCache orderCache;
 
-    public OfferConsumer(TourAppBot telegramBot, UserRepo userRepo, OfferCache offerCache, OfferService offerService) {
+    public OfferConsumer(TourAppBot telegramBot, UserRepo userRepo, OfferCache offerCache, OfferService offerService,
+                         OrderCache orderCache) {
         this.telegramBot = telegramBot;
         this.userRepo = userRepo;
         this.offerCache = offerCache;
         this.offerService = offerService;
+        this.orderCache=orderCache;
     }
 
     @SneakyThrows
@@ -43,14 +47,15 @@ public class OfferConsumer {
             count++;
             if (count == 6) {
                 offerService.save(offer, user,false);
-                telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("A").replyMarkup(getLoadButtons()).build());
+                telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
+                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()))).build());
             } else if (count < 6) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
                 sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId()));
 
-                String text = "Agent:" + offer.getAgencyName() + "\n" + offer.getAgencyNumber() + Emojis.Phone;
+                String text = Emojis.Office+" "+ offer.getAgencyName() + "\n" +Emojis.Phone +" "+ offer.getAgencyNumber();
                 sendPhoto.setCaption(text);
                 telegramBot.execute(sendPhoto);
                 offerService.save(offer, user,true);

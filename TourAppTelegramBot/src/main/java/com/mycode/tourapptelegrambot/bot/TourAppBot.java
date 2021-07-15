@@ -5,6 +5,7 @@ import com.mycode.tourapptelegrambot.bot.commands.ContinueCommand;
 import com.mycode.tourapptelegrambot.bot.commands.NewCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StartCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StopCommand;
+import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
@@ -15,12 +16,14 @@ import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.GetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
-import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -114,8 +117,30 @@ public class TourAppBot extends TelegramWebhookBot {
         botCommands.add(new NewCommand());
         botCommands.add(new ContinueCommand());
         botCommands.add(new StopCommand());
+
         execute(SetMyCommands.builder().commands(botCommands).build());
     }
+
+//    @SneakyThrows
+//    @PostConstruct
+//    public void bot() {
+//
+////        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+////        replyKeyboardMarkup.setSelective(true);
+////        replyKeyboardMarkup.setResizeKeyboard(true);
+////        replyKeyboardMarkup.setOneTimeKeyboard(false);
+////        List<KeyboardRow> keyboard = new ArrayList<>();
+////
+////        KeyboardRow row2 = new KeyboardRow();
+////        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
+//        ReplyKeyboardRemove replyKeyboardRemove=new ReplyKeyboardRemove();
+//        replyKeyboardRemove.setRemoveKeyboard(true);
+////        keyboard.add(row2);
+////        replyKeyboardMarkup.setKeyboard(keyboard);
+//        execute(SendMessage.builder().chatId("1797927400").text("fw").replyMarkup(replyKeyboardRemove).build());
+//
+//    }
+
 
     @SneakyThrows
     public void sendOffer(String chatId, File image, String caption, InlineKeyboardMarkup acceptButtons) {

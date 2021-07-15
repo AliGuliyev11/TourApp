@@ -12,7 +12,10 @@ import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +45,20 @@ public class UniversalInlineButtons {
             next = item.getNext();
             questionId = item.getId();
             questionType = item.getType();
-            if (!item.getType().equals(QuestionType.Free_Text) && !item.getType().equals(QuestionType.Button_Calendar) && !item.getType().equals(QuestionType.Button_Numeric)) {
+            if (!item.getType().equals(QuestionType.Free_Text) && !item.getType().equals(QuestionType.Button_Calendar)
+                    && !item.getType().equals(QuestionType.Button_Numeric) && !item.getType().equals(QuestionType.Button_Keyboard)) {
                 rowList.add(addInlineKeyboardButton(item.getText(), item.getKeyword(), item.getId()));
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
                 sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
+                return sendMessage;
+            }else if (item.getType().equals(QuestionType.Button_Keyboard)){
+                buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
+                        .message(question.getQuestion()).build());
+                cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
+                sendMessage.setReplyMarkup(addKeyboardButton(item.getText()));
                 return sendMessage;
             }
         }
@@ -63,6 +73,44 @@ public class UniversalInlineButtons {
 
         return sendMessage;
     }
+
+
+//    @SneakyThrows
+//    @PostConstruct
+//    public void bot() {
+//
+//        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+//        replyKeyboardMarkup.setSelective(true);
+//        replyKeyboardMarkup.setResizeKeyboard(true);
+//        replyKeyboardMarkup.setOneTimeKeyboard(false);
+//
+//        List<KeyboardRow> keyboard = new ArrayList<>();
+//
+//        KeyboardRow row2 = new KeyboardRow();
+//        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
+//
+//        keyboard.add(row2);
+//        replyKeyboardMarkup.setKeyboard(keyboard);
+//        execute(SendMessage.builder().chatId("1797927400").text("fw").replyMarkup(replyKeyboardMarkup).build());
+//
+//    }
+
+    private ReplyKeyboardMarkup addKeyboardButton(String text){
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
+
+        keyboard.add(row2);
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
 
     private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword, Long id) {
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();

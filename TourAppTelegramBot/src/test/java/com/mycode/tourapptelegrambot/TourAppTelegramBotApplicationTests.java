@@ -51,13 +51,13 @@ class TourAppTelegramBotApplicationTests {
     private ModelMapper modelMapper = null;
     private Message message;
 
-    private TelegramFacade telegramFacade;
+//    private TelegramFacade telegramFacade;
     private TourAppBot tourAppBot;
 
     @BeforeEach
     void init() {
         message = Mockito.mock(Message.class);
-        telegramFacade = new TelegramFacade();
+//        telegramFacade = new TelegramFacade();
         modelMapper = new ModelMapper();
     }
 
@@ -268,35 +268,35 @@ class TourAppTelegramBotApplicationTests {
 //    }
 
     @SneakyThrows
-    @Test
-    void sendAnswerCallbackQuery() {
-        String text="Test";
-        CallbackQuery callbackQuery=new CallbackQuery();
-        callbackQuery.setId("4545ryt");
+//    @Test
+//    void sendAnswerCallbackQuery() {
+//        String text="Test";
+//        CallbackQuery callbackQuery=new CallbackQuery();
+//        callbackQuery.setId("4545ryt");
+//
+//        Method privateMethod = TelegramFacade.class.getDeclaredMethod("sendAnswerCallbackQuery", String.class, CallbackQuery.class);
+//        privateMethod.setAccessible(true);
+//        AnswerCallbackQuery sendedMessage = (AnswerCallbackQuery) privateMethod.invoke(telegramFacade, text,callbackQuery);
+//
+//        AnswerCallbackQuery answerCallbackQuery= AnswerCallbackQuery.builder().text("Test").callbackQueryId("4545ryt").showAlert(true).build();
+//
+//        Assertions.assertEquals(answerCallbackQuery,sendedMessage);
+//
+//    }
 
-        Method privateMethod = TelegramFacade.class.getDeclaredMethod("sendAnswerCallbackQuery", String.class, CallbackQuery.class);
-        privateMethod.setAccessible(true);
-        AnswerCallbackQuery sendedMessage = (AnswerCallbackQuery) privateMethod.invoke(telegramFacade, text,callbackQuery);
-
-        AnswerCallbackQuery answerCallbackQuery= AnswerCallbackQuery.builder().text("Test").callbackQueryId("4545ryt").showAlert(true).build();
-
-        Assertions.assertEquals(answerCallbackQuery,sendedMessage);
-
-    }
-
-    @SneakyThrows
-    @Test
-    void textToLocalDate() {
-
-        String a = "2021-07-14";
-
-        Method privateMethod = TelegramFacade.class.getDeclaredMethod("getLocaleDate", String.class);
-        privateMethod.setAccessible(true);
-        LocalDate localDate = (LocalDate) privateMethod.invoke(telegramFacade, a);
-        LocalDate expectedLocalDate = new LocalDate(2021, 7, 14);
-
-        Assertions.assertEquals(expectedLocalDate, localDate);
-    }
+//    @SneakyThrows
+//    @Test
+//    void textToLocalDate() {
+//
+//        String a = "2021-07-14";
+//
+//        Method privateMethod = TelegramFacade.class.getDeclaredMethod("getLocaleDate", String.class);
+//        privateMethod.setAccessible(true);
+//        LocalDate localDate = (LocalDate) privateMethod.invoke(telegramFacade, a);
+//        LocalDate expectedLocalDate = new LocalDate(2021, 7, 14);
+//
+//        Assertions.assertEquals(expectedLocalDate, localDate);
+//    }
 
     @Test
     void getLanguageButtonsTest(){

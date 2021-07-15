@@ -1,7 +1,6 @@
 package com.mycode.tourapptelegrambot.bot.botfacace;
 
 
-import com.google.common.annotations.VisibleForTesting;
 import com.ibm.cloud.sdk.core.security.Authenticator;
 import com.ibm.cloud.sdk.core.security.IamAuthenticator;
 import com.ibm.watson.speech_to_text.v1.SpeechToText;
@@ -61,8 +60,6 @@ import static com.mycode.tourapptelegrambot.utils.CalendarUtil.WD;
 
 @Component
 @Slf4j
-@NoArgsConstructor
-@AllArgsConstructor
 public class TelegramFacade {
 
     private BotStateContext botStateContext;
@@ -123,16 +120,23 @@ public class TelegramFacade {
         Message message = update.getMessage();
 
         if (message != null && !message.hasText()) {
-
+        if (buttonTypeAndMessage.get(message.getFrom().getId()) != null &&
+                buttonTypeAndMessage.get(message.getFrom().getId()).getQuestionType().equals(QuestionType.Button_Keyboard) && message.isReply()) {
+            replyMessage=handleInputMessage(message);
+        }else{
             telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
             return SendMessage.builder().chatId(String.valueOf(message.getChatId())).text("").build();
         }
 
+        }
+
+
         if (message != null && message.hasText()) {
             log.info("New message from User:{}, chatId: {},  with text: {}",
                     message.getFrom().getUserName(), message.getChatId(), message.getText());
+
             if (!message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
-                    (messageBoolCache.get(update.getMessage().getFrom().getId()) == null || messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
+                    (offerService.checkUserOffer(message.getFrom().getId()) || messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                             !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()
                     )) {
                 telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
@@ -192,8 +196,12 @@ public class TelegramFacade {
 
     @SneakyThrows
     private SendMessage handleInputMessage(Message message) {
-
-        String inputMsg = message.getText().toLowerCase();
+        String inputMsg;
+        if (message.isReply()){
+            inputMsg=message.getContact().getPhoneNumber();
+        }else{
+            inputMsg = message.getText().toLowerCase();
+        }
         Long userId = message.getFrom().getId();
         String chatId = String.valueOf(message.getChatId());
         BotState botState = null;
@@ -319,7 +327,7 @@ public class TelegramFacade {
             callBackAnswer = offerService.loadMore(userId, chatId);
             callBackAnswer.add(DeleteMessage.builder().chatId(String.valueOf(chatId)).messageId(messageId).build());
         } else if (buttonQuery.getData().startsWith("Offer")) {
-            callBackAnswer = acceptOffer(buttonQuery,userOrder);
+            callBackAnswer = acceptOffer(buttonQuery, userOrder);
         } else {
             Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
             callBackAnswer = getDateCallbackAnswer(buttonQuery, userOrder, userId, chatId, messageId, question);
@@ -331,10 +339,10 @@ public class TelegramFacade {
         return callBackAnswer;
     }
 
-    private List<BotApiMethod<?>> acceptOffer(CallbackQuery buttonQuery,Order userOrder) {
+    private List<BotApiMethod<?>> acceptOffer(CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
-        String chatId= String.valueOf(buttonQuery.getMessage().getChatId());
-        Integer messageId=buttonQuery.getMessage().getMessageId();
+        String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
+        Integer messageId = buttonQuery.getMessage().getMessageId();
         Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
         offerService.acceptOffer(offerId);
         callBackAnswer.add(sendAnswerCallbackQuery(getAcceptedMessage(userOrder), buttonQuery));

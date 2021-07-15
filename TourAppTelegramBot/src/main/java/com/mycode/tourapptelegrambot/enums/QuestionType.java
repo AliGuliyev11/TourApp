@@ -11,5 +11,6 @@ public enum QuestionType {
     Button_Free_Text,
     Button_Prediction,
     Button_Calendar,
-    Button_Numeric
+    Button_Numeric,
+    Button_Keyboard
 }

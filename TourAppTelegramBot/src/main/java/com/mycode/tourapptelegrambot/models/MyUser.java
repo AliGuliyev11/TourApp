@@ -18,6 +18,7 @@ public class MyUser {
     Long id;
     String chatId;
     String uuid;
+    String phoneNumber;
 
     @Override
     public String toString() {
@@ -25,6 +26,7 @@ public class MyUser {
                 "id=" + id +
                 ", chatId='" + chatId + '\'' +
                 ", uuid='" + uuid + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }
 }

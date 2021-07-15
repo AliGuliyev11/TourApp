@@ -116,5 +116,29 @@ public class ValidationResponseMessages {
         return text;
     }
 
+    public static String getLoadMoreText(Order userOrder) {
+        String text;
+        if (userOrder.getLanguage().name() == "AZ") {
+            text = "Daha çox yüklə...";
+        } else if (userOrder.getLanguage().name() == "RU") {
+            text = "Загрузи больше...";
+        } else {
+            text = "Load more...";
+        }
+        return text;
+    }
+
+    public static String noMoreLoads(Order userOrder) {
+        String text;
+        if (userOrder.getLanguage().name() == "AZ") {
+            text = "Hələlik başqa təklif yoxdur.";
+        } else if (userOrder.getLanguage().name() == "RU") {
+            text = "Других предложений пока нет.";
+        } else {
+            text = "There is no other offer yet.";
+        }
+        return text;
+    }
+
 
 }

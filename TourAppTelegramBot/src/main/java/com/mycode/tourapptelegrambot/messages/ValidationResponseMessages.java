@@ -14,9 +14,9 @@ public class ValidationResponseMessages {
         if (userOrder.getLanguage().name() == "AZ") {
             text = "Əla,qısa zamanda sizə təkliflər göndərəcəyik.";
         } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Отлично, мы пришлем вам предложения в кратчайшие сроки";
+            text = "Отлично, мы пришлем вам предложения в кратчайшие сроки.";
         } else {
-            text = "Excellent, we will send you suggestions as soon as possible";
+            text = "Excellent, we will send you suggestions as soon as possible.";
         }
         return text + Emojis.SUCCESS_MARK;
     }

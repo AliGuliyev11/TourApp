@@ -1,6 +1,7 @@
 package com.mycode.tourapptelegrambot.bot.botfacace;
 
 
+import com.google.common.annotations.VisibleForTesting;
 import com.ibm.cloud.sdk.core.security.Authenticator;
 import com.ibm.cloud.sdk.core.security.IamAuthenticator;
 import com.ibm.watson.speech_to_text.v1.SpeechToText;
@@ -25,6 +26,8 @@ import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.services.OfferService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -58,22 +61,25 @@ import static com.mycode.tourapptelegrambot.utils.CalendarUtil.WD;
 
 @Component
 @Slf4j
+@NoArgsConstructor
+@AllArgsConstructor
 public class TelegramFacade {
 
-    private final BotStateContext botStateContext;
-    private final TourAppBot telegramBot;
-    private final QuestionRepo questionRepo;
-    private final QuestionActionRepo questionActionRepo;
-    private final UserRepo userRepo;
-    private final QuestionIdAndNextCache questionIdAndNextCache;
-    private final CalendarCache calendarCache;
-    private final ButtonAndMessageCache buttonTypeAndMessage;
-    private final MessageBoolCache messageBoolCache;
-    private final BotStateCache botStateCache;
-    private final OrderCache orderCache;
-    private final OfferCache offerCache;
-    private final LocaleMessageService messageService;
-    private final OfferService offerService;
+    private BotStateContext botStateContext;
+    private TourAppBot telegramBot;
+    private QuestionRepo questionRepo;
+    private QuestionActionRepo questionActionRepo;
+    private UserRepo userRepo;
+    private QuestionIdAndNextCache questionIdAndNextCache;
+    private CalendarCache calendarCache;
+    private ButtonAndMessageCache buttonTypeAndMessage;
+    private MessageBoolCache messageBoolCache;
+    private BotStateCache botStateCache;
+    private OrderCache orderCache;
+    private OfferCache offerCache;
+    private LocaleMessageService messageService;
+    private OfferService offerService;
+
 
     public TelegramFacade(@Lazy TourAppBot telegramBot, BotStateContext botStateContext,
                           QuestionRepo question, QuestionActionRepo questionActionRepo, QuestionIdAndNextCache questionIdAndNextCache,
@@ -95,6 +101,7 @@ public class TelegramFacade {
         this.offerCache = offer;
         this.offerService = offerService;
     }
+
 
     /**
      * Every time user send message program enters to this method
@@ -548,7 +555,6 @@ public class TelegramFacade {
     private LocalDate getLocaleDate(String text) {
         DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
         DateTime dateTime = FORMATTER.parseDateTime(text);
-        LocalDate localDate = dateTime.toLocalDate();
         return dateTime.toLocalDate();
     }
 

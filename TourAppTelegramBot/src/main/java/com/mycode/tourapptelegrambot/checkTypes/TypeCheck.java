@@ -11,7 +11,6 @@ public class TypeCheck {
 
     public static Object boxPrimitiveClass(Class<?> type, String text) {
         if (type == int.class) {
-
             return Integer.valueOf(text);
         } else if (type == long.class) {
             return Long.valueOf(text);

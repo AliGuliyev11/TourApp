@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
-import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -16,11 +15,11 @@ public class LoadMore {
 
         load.setCallbackData("loadMore");
 
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(load);
+        List<InlineKeyboardButton> keyboardButtonsRow = new ArrayList<>();
+        keyboardButtonsRow.add(load);
 
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(keyboardButtonsRow1);
+        rowList.add(keyboardButtonsRow);
 
         inlineKeyboardMarkup.setKeyboard(rowList);
 

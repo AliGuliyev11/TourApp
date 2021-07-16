@@ -10,6 +10,7 @@ import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.redis.RedisCache.QuestionIdAndNextCache;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
+import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -20,8 +21,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.getFromMyContact;
 
 /**
  * This class for creating inline keyboard buttons dynamically
@@ -87,7 +86,7 @@ public class UniversalInlineButtons {
         List<KeyboardRow> keyboard = new ArrayList<>();
 
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(KeyboardButton.builder().text(getFromMyContact(languages)).requestContact(true).build());
+        row2.add(KeyboardButton.builder().text(text+ Emojis.Iphone).requestContact(true).build());
 
         keyboard.add(row2);
         replyKeyboardMarkup.setKeyboard(keyboard);

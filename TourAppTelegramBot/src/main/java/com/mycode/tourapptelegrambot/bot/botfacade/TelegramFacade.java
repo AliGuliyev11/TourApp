@@ -55,10 +55,13 @@ import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.
 import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
 import static com.mycode.tourapptelegrambot.utils.CalendarUtil.WD;
 
-/** This is main telegram bot class
- * @apiNote Every request enters this class
+/**
+ * This is main telegram bot class
+ *
  * @author Ali Guliyev
- * @version 1.0*/
+ * @version 1.0
+ * @apiNote Every request enters this class
+ */
 
 
 @Component
@@ -132,13 +135,15 @@ public class TelegramFacade {
     }
 
 
-    /** This method for when message not null and message hasn't text
+    /**
+     * This method for when message not null and message hasn't text
+     *
+     * @param message message sended by user
+     * @return SendMessage
      * @apiNote For example,message.hasVoice(),message.hasDocument etc.
      * If message type is reply and current button type is Button_Keyboard program handle this message
      * But if message type is reply and current button type isn't Button_Keyboard program delete last message
-     * @param message message sended by user
-     * @return SendMessage
-     * */
+     */
 
     @SneakyThrows
     private SendMessage messageHasNotText(Message message) {
@@ -153,18 +158,21 @@ public class TelegramFacade {
         return replyMessage;
     }
 
-    /** This method for when message not null and message has text
+    /**
+     * This method for when message not null and message has text
+     *
+     * @param message message sended by user
+     * @param update  updated message sended by user
+     * @return SendMessage
      * @apiNote If message has text and not equal bot command type and cached message type is Button program deletes last message
      * But,if message has text and equal bot command or something else program handle this message
-     * @param message message sended by user
-     * @param update updated message sended by user
-     * @return SendMessage */
+     */
     private SendMessage messageHasText(Message message, Update update) throws TelegramApiException {
         SendMessage replyMessage;
         log.info("New message from User:{}, chatId: {},  with text: {}",
                 message.getFrom().getUserName(), message.getChatId(), message.getText());
 
-        if (!message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
+        if (!message.getText().equals("/new") && !message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
                 (offerService.checkUserOffer(message.getFrom().getId()) || messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                         !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()
                 )) {
@@ -190,11 +198,11 @@ public class TelegramFacade {
      *
      * @param chatId sending message to user
      * @param voice  voice file which sended by user
+     * @return SendMessage
      * @apiNote This API owns to IBM cloud
      * Authenticator-API key
      * setServiceUrl-API url
      * @version 1.1
-     * @return SendMessage
      */
 
     @SneakyThrows
@@ -224,6 +232,7 @@ public class TelegramFacade {
 
     /**
      * If message has text program enters to this method
+     *
      * @param message message which sended by user
      * @return SendMessage
      */
@@ -244,7 +253,8 @@ public class TelegramFacade {
             case "/new":
             case "/start":
                 if (orderCache.get(userId).getLanguage() != null) {
-                    replyMessage = SendMessage.builder().chatId(chatId).text(getStartCacheMessage(orderCache.get(userId))).parseMode("HTML").build();
+                    replyMessage = SendMessage.builder().chatId(chatId)
+                            .text(messageService.getMessage("start.cache",orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                 } else {
                     replyMessage = startCase(userId, chatId);
                     botState = BotState.FILLING_TOUR;
@@ -253,7 +263,8 @@ public class TelegramFacade {
             case "/stop":
                 telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
                 clearCache(userId);
-                replyMessage = SendMessage.builder().chatId(chatId).text(getStopContinueCacheMessage()).parseMode("HTML").build();
+                replyMessage = SendMessage.builder().chatId(chatId)
+                        .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                 break;
             case "/continue":
                 if (buttonTypeAndMessage.get(userId) != null) {
@@ -263,18 +274,22 @@ public class TelegramFacade {
                     botState = BotState.FILLING_TOUR;
                 } else {
                     if (orderCache.get(userId).getLanguage() == null) {
-                        replyMessage = SendMessage.builder().chatId(chatId).text(getStopContinueCacheMessage()).parseMode("HTML").build();
+                        replyMessage = SendMessage.builder().chatId(chatId)
+                                .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                     } else {
-                        replyMessage = SendMessage.builder().chatId(chatId).text(getContinueMessage(orderCache.get(userId))).parseMode("HTML").build();
+                        replyMessage = SendMessage.builder().chatId(chatId)
+                                .text(messageService.getMessage("continue.message",orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                     }
                 }
 
                 break;
             default:
                 if (buttonTypeAndMessage.get(userId) == null && orderCache.get(userId).getLanguage() != null) {
-                    replyMessage = SendMessage.builder().chatId(chatId).text(getDefaultCacheMessage(orderCache.get(userId))).parseMode("HTML").build();
+                    replyMessage = SendMessage.builder().chatId(chatId)
+                            .text(messageService.getMessage("default.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                 } else if (orderCache.get(userId).getLanguage() == null) {
-                    replyMessage = SendMessage.builder().chatId(chatId).text(getStopContinueCacheMessage()).parseMode("HTML").build();
+                    replyMessage = SendMessage.builder().chatId(chatId)
+                            .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                 } else {
                     botState = botStateCache.get(userId).getBotState();
                     replyMessage = botStateContext.processInputMessage(botState, message);
@@ -287,9 +302,11 @@ public class TelegramFacade {
         return replyMessage;
     }
 
-    /**This method for clear cache
-     * @apiNote  When user input is /stop program clear cache
+    /**
+     * This method for clear cache
+     *
      * @param userId current user id for clearing cache and de-activate current session
+     * @apiNote When user input is /stop program clear cache
      */
 
     public void clearCache(Long userId) {
@@ -310,38 +327,45 @@ public class TelegramFacade {
         offerService.clearUserOffer(userId, uuid);
     }
 
-    @Value("${startCase.photoPath}")
-    String photoPath;
+//    @Value("${startCase.photoPath}")
+//    String photoPath;
 
-    /**This method for start case
-     * @apiNote  When user input is /start program first sends photo
-     * Then asks language
-     * @return SendMessage
+    /**
+     * This method for start case
+     *
      * @param userId current user id
      * @param chatId current chat id
+     * @return SendMessage
+     * @apiNote When user input is /start program first sends photo
+     * Then asks language
      */
 
     @SneakyThrows
     private SendMessage startCase(Long userId, String chatId) {
+
+        Languages languages = orderCache.get(userId).getLanguage();
         telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
-        telegramBot.sendPhoto(chatId, messageService.getMessage("startCase.firstMessage") + Emojis.Beach, photoPath);
+        telegramBot.sendPhoto(chatId, messageService.getMessage("startCase.firstMessage", languages) + Emojis.Beach,
+                messageService.getMessage("startCase.photoPath", languages));
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).build());
         String uuid = UUID.randomUUID().toString();
         orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().userId(uuid).chatId(chatId).build()).build());
-        SendMessage sendMessage = SendMessage.builder().chatId(chatId).text(messageService.getMessage("startCase.askLang"))
+        SendMessage sendMessage = SendMessage.builder().chatId(chatId).text(messageService.getMessage("startCase.askLang", languages))
                 .replyMarkup(getLanguageButtons()).parseMode("HTML").build();
         userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
         return sendMessage;
     }
 
-    /**This method fir handle callback query
-     * @apiNote  If update @hasCallbackQuery program enters this method
+    /**
+     * This method fir handle callback query
+     *
+     * @param buttonQuery this is callback query
+     * @return List of BotApiMethod<?>
+     * @apiNote If update @hasCallbackQuery program enters this method
      * And when user click inline button program checks callback query's data
      * If data start with 'Lang' enters 1st if
      * Else if start with 'Order' enters 2nd if
      * Else statement for calendar
-     * @param buttonQuery this is callback query
-     * @return List of BotApiMethod<?>
      */
 
     private List<BotApiMethod<?>> processCallbackQuery(CallbackQuery buttonQuery) {
@@ -358,7 +382,7 @@ public class TelegramFacade {
 
             if (question == null) {
                 botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
-                callBackAnswer.add(new SendMessage(chatId, sendEndingMessage(userOrder)));
+                callBackAnswer.add(new SendMessage(chatId,messageService.getMessage("ending.msg",userOrder.getLanguage(),Emojis.SUCCESS_MARK)));
                 return callBackAnswer;
             }
 
@@ -381,10 +405,13 @@ public class TelegramFacade {
         return callBackAnswer;
     }
 
-    /** When user accepts offer program enters this method
+    /**
+     * When user accepts offer program enters this method
+     *
      * @param buttonQuery callback query
-     * @param userOrder current user order
-     * @return List of BotApiMethod<?> */
+     * @param userOrder   current user order
+     * @return List of BotApiMethod<?>
+     */
 
     private List<BotApiMethod<?>> acceptOffer(CallbackQuery buttonQuery, Order userOrder) {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
@@ -392,22 +419,23 @@ public class TelegramFacade {
         Integer messageId = buttonQuery.getMessage().getMessageId();
         Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
         offerService.acceptOffer(offerId);
-        callBackAnswer.add(sendAnswerCallbackQuery(getAcceptedMessage(userOrder), buttonQuery));
+        callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message",userOrder.getLanguage()), buttonQuery));
         callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         return callBackAnswer;
     }
 
 
     /**
-     *This method for calendar callback answer
-     * @apiNote  processCallbackQuery's else statement
+     * This method for calendar callback answer
+     *
      * @param buttonQuery callback query
-     * @param userOrder current user order
-     * @param userId current user's id
-     * @param chatId private chat id
-     * @param messageId last message id
-     * @param question current question
+     * @param userOrder   current user order
+     * @param userId      current user's id
+     * @param chatId      private chat id
+     * @param messageId   last message id
+     * @param question    current question
      * @return List of BotApiMethod<?>
+     * @apiNote processCallbackQuery's else statement
      */
 
     private List<BotApiMethod<?>> getDateCallbackAnswer(CallbackQuery buttonQuery, Order userOrder, Long userId, String chatId,
@@ -423,13 +451,14 @@ public class TelegramFacade {
 
     /**
      * This method for order callback answer
-     * @apiNote processCallbackQuery's 2nd if statement
-     * @return List of BotApiMethod<?>
+     *
      * @param currentButtonTypeAndMessage cached button type and message
-     * @param userId current user's id
-     * @param chatId private chat id
-     * @param messageId last message id
-     * @param question current question
+     * @param userId                      current user's id
+     * @param chatId                      private chat id
+     * @param messageId                   last message id
+     * @param question                    current question
+     * @return List of BotApiMethod<?>
+     * @apiNote processCallbackQuery's 2nd if statement
      */
 
     private List<BotApiMethod<?>> getOrderCallbackAnswer(CurrentButtonTypeAndMessage currentButtonTypeAndMessage, Long userId,
@@ -454,12 +483,13 @@ public class TelegramFacade {
     /**
      * This method for language callback answer
      * processCallbackQuery's 1st if  statement
-     * @return List of BotApiMethod<?>
-     * @param messageId last message id
-     * @param userId current user's id
-     * @param chatId private chat id
+     *
+     * @param messageId   last message id
+     * @param userId      current user's id
+     * @param chatId      private chat id
      * @param buttonQuery callback query
-     * @param userOrder current user order
+     * @param userOrder   current user order
+     * @return List of BotApiMethod<?>
      */
 
     private List<BotApiMethod<?>> getLanguageCallbackAnswer(Long userId, String chatId, int messageId, CallbackQuery buttonQuery, Order userOrder) {
@@ -476,9 +506,10 @@ public class TelegramFacade {
 
     /**
      * Program enters to this method when program send calendar to user
-     * @return List of BotApiMethod<?>
-     * @param userOrder current user order
+     *
+     * @param userOrder   current user order
      * @param buttonQuery callback query
+     * @return List of BotApiMethod<?>
      */
 
     private List<BotApiMethod<?>> getDateTime(CallbackQuery buttonQuery, Order userOrder) {
@@ -489,7 +520,7 @@ public class TelegramFacade {
         } else if (buttonQuery.getData().equals("<")) {
             callBackAnswer = getPrevCalendar(time, buttonQuery, userOrder);
         } else if (Arrays.stream(WD).anyMatch(a -> a.equals(buttonQuery.getData())) || buttonQuery.getData().equals(IGNORE)) {
-            callBackAnswer.add(sendAnswerCallbackQuery(sendIgnoreMessage(userOrder), buttonQuery));
+            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("ignore.message",userOrder.getLanguage(),Emojis.Times), buttonQuery));
         } else {
             BotApiMethod<?> answer = findCallback(buttonQuery, userOrder, questionIdAndNextCache.get(buttonQuery.getFrom().getId()));
             if (answer != null) {
@@ -511,7 +542,8 @@ public class TelegramFacade {
 
     /**
      * Get next month calendar
-     * @param time current cached time for plus month
+     *
+     * @param time        current cached time for plus month
      * @param buttonQuery callback query
      * @return List of BotApiMethod<?>
      */
@@ -531,11 +563,12 @@ public class TelegramFacade {
 
     /**
      * Get previous month calendar
-     * @apiNote  If previous month @isBefore @LocaleDate.now() program send user callback answer
-     * @param time current cached time for plus month
+     *
+     * @param time        current cached time for plus month
      * @param buttonQuery callback query
-     * @param userOrder current user order
+     * @param userOrder   current user order
      * @return LIst of BotApiMethod<?>
+     * @apiNote If previous month @isBefore @LocaleDate.now() program send user callback answer
      */
 
     private List<BotApiMethod<?>> getPrevCalendar(int time, CallbackQuery buttonQuery, Order userOrder) {
@@ -544,7 +577,7 @@ public class TelegramFacade {
         final String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
         final int messageId = buttonQuery.getMessage().getMessageId();
         if (time == 0) {
-            callBackAnswer.add(sendAnswerCallbackQuery(getPrevCalendarMessage(userOrder), buttonQuery));
+            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("prev.calendar",userOrder.getLanguage(),Emojis.Times), buttonQuery));
         } else {
             time--;
             calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
@@ -560,12 +593,13 @@ public class TelegramFacade {
 
     /**
      * Dynamically finding button callback data
-     * @apiNote  Program checks if keyword which comes from database matches button's  callback data
-     * If matched with keyword, program will do some operations
-     * @param userOrder current user order
-     * @param buttonQuery callback query
+     *
+     * @param userOrder         current user order
+     * @param buttonQuery       callback query
      * @param questionIdAndNext cached question id and next question id
      * @return BotApiMethod<?>
+     * @apiNote Program checks if keyword which comes from database matches button's  callback data
+     * If matched with keyword, program will do some operations
      */
 
     @SneakyThrows
@@ -598,11 +632,12 @@ public class TelegramFacade {
 
     /**
      * Method for set calendar LocalDate field
+     *
      * @param buttonQuery callback query
-     * @param field Order entity's current field
-     * @param userId current user id
-     * @param type current question type @see QuestionType enum
-     * @param userOrder current user order
+     * @param field       Order entity's current field
+     * @param userId      current user id
+     * @param type        current question type @see QuestionType enum
+     * @param userOrder   current user order
      * @return BotApiMethod<?>
      */
 
@@ -611,7 +646,7 @@ public class TelegramFacade {
         Object text = buttonQuery.getData();
         LocalDate localDate = getLocaleDate(text.toString());
         if (localDate.isBefore(LocalDate.now())) {
-            return sendAnswerCallbackQuery(getPrevCalendarMessage(userOrder), buttonQuery);
+            return sendAnswerCallbackQuery(messageService.getMessage("prev.calendar",userOrder.getLanguage(),Emojis.Times), buttonQuery);
         }
         Date date = localDate.toDate();
         field.set(userOrder, date);
@@ -624,12 +659,13 @@ public class TelegramFacade {
 
     /**
      * Mapping button data to order
+     *
      * @param questionAction current question action
-     * @param userOrder current user order
-     * @param type Order entity's current field
-     * @param userId current user id
-     * @param field current Order entity's field
-     * @param questionType current question type @see QuestionType enum
+     * @param userOrder      current user order
+     * @param type           Order entity's current field
+     * @param userId         current user id
+     * @param field          current Order entity's field
+     * @param questionType   current question type @see QuestionType enum
      */
 
     @SneakyThrows
@@ -650,6 +686,7 @@ public class TelegramFacade {
 
     /**
      * Parse string to @org.joda.time LocalDate
+     *
      * @param text text for convert to LocalDate
      * @return @org.joda.time LocalDate
      */
@@ -663,8 +700,9 @@ public class TelegramFacade {
 
     /**
      * When user choose language button program send callback answer to user just for info
+     *
      * @param buttonQuery callback query
-     * @param userOrder setting language type to new Order
+     * @param userOrder   setting language type to new Order
      * @return BotApiMethod<?>
      */
 
@@ -689,13 +727,14 @@ public class TelegramFacade {
                 .message(userOrder.getLanguage().name()).build());
         messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(true).build());
 
-        return sendAnswerCallbackQuery(getBotLangMessage(userOrder), buttonQuery);
+        return sendAnswerCallbackQuery(messageService.getMessage("bot.lang", userOrder.getLanguage()), buttonQuery);
     }
 
 
     /**
      * This method send user callback answer with/without alert
-     * @param text text of AnswerCallbackQuery
+     *
+     * @param text          text of AnswerCallbackQuery
      * @param callbackQuery callback query
      * @return AnswerCallbackQuery
      */

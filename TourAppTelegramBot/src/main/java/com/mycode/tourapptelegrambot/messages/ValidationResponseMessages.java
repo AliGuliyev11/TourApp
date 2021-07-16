@@ -2,7 +2,9 @@ package com.mycode.tourapptelegrambot.messages;
 
 import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.Order;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.Emojis;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * This class for static responses to user
@@ -10,6 +12,13 @@ import com.mycode.tourapptelegrambot.utils.Emojis;
 
 public class ValidationResponseMessages {
 
+    private final LocaleMessageService localeMessageService;
+
+    public ValidationResponseMessages(LocaleMessageService localeMessageService) {
+        this.localeMessageService = localeMessageService;
+    }
+
+    //
     public static String sendEndingMessage(Order userOrder) {
         String text;
         if (userOrder.getLanguage().name() == "AZ") {
@@ -19,9 +28,11 @@ public class ValidationResponseMessages {
         } else {
             text = "Excellent, we will send you suggestions as soon as possible.";
         }
-        return text + Emojis.SUCCESS_MARK;
+        return text="" + Emojis.SUCCESS_MARK;
     }
+    //
 
+    //
     public static String sendIgnoreMessage(Order userOrder) {
         String text;
         if (userOrder.getLanguage().name() == "AZ") {
@@ -31,21 +42,25 @@ public class ValidationResponseMessages {
         } else {
             text = "You can only select dates";
         }
-        return text + Emojis.Times;
+        return text="" + Emojis.Times;
     }
+    //
 
+    //
     public static String getPrevCalendarMessage(Order userOrder) {
         String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Yalnız indiki və gələcək zamanı seçə bilərsiz";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Вы можете выбрать только настоящее и будущее время";
-        } else {
-            text = "You can only choose the present and future tenses";
-        }
-        return text + Emojis.Times;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Yalnız indiki və gələcək zamanı seçə bilərsiz";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Вы можете выбрать только настоящее и будущее время";
+//        } else {
+//            text = "You can only choose the present and future tenses";
+//        }
+        return text="" + Emojis.Times;
     }
+    //
 
+    //
     public static String getContinueMessage(Order userOrder) {
         String text;
         if (userOrder.getLanguage().name() == "AZ") {
@@ -55,21 +70,24 @@ public class ValidationResponseMessages {
         } else {
             text = "There is no question for you";
         }
-        return text;
+        return text="";
     }
+    //
 
-    public static String getBotLangMessage(Order userOrder) {
-        String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Botun dili Azərbaycan dili olaraq təyin olundu";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Язык Ботуна был определен как русский";
-        } else {
-            text = "Bot's language was designated as English";
-        }
-        return text;
-    }
+//    public static String getBotLangMessage(Order userOrder) {
+////        String text;
+////        if (userOrder.getLanguage().name() == "AZ") {
+////            text = "Botun dili Azərbaycan dili olaraq təyin olundu";
+////        } else if (userOrder.getLanguage().name() == "RU") {
+////            text = "Язык Ботуна был определен как русский";
+////        } else {
+////            text = "Bot's language was designated as English";
+////        }
+//
+//        return text;
+//    }
 
+//
     public static String getStartCacheMessage(Order userOrder) {
         String text;
         if (userOrder.getLanguage().name() == "AZ") {
@@ -82,88 +100,99 @@ public class ValidationResponseMessages {
             text = "To restart, you must first enter <b> /stop </b>\n /stop - end the process" +
                     " \n /continue-to continue your questions";
         }
-        return text;
+        return text="";
     }
-
+    //
+//
     public static String getStopContinueCacheMessage() {
         String text = "Yenidən başlamaq üçün ilk öncə <b> /start </b> və ya <b> /new </b> yazmalısan\n/new - prosesi yenidən başlamaq üçün";
-        return text;
+        return text="";
     }
+//
 
+
+//
     public static String getDefaultCacheMessage(Order userOrder) {
         String text;
         if (userOrder.getLanguage().name() == "AZ") {
             text = "Yenidən başlamaq üçün ilk öncə <b> /start </b> və ya <b> /new </b> yazmalısan\n/new - prosesi yenidən başlamaq üçün" +
                     "\n /stop - prosesi bitirmək üçün ";
         } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Для перезапуска необходимо сначала ввести <b> /start </b> или <b> /new </b>\n/new - перезапустить процесс" +
-                    "\n /stop - завершить процесс";
+            text = "Для перезапуска необходимо сначала ввести <b> /start </b> или <b> /new </b>\n/new - перезапустить процесс\n /stop - завершить процесс";
         } else {
             text = "To restart, you must first type <b> /start </b> or <b> /new </b>\n/new - to restart the process" +
                     "\n /stop - end the process";
         }
-        return text;
+        return text="";
     }
+    //
 
+    //
     public static String getAcceptedMessage(Order userOrder) {
         String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Bu təklifi qəbul elədiz.Sizinlə yaxın zamanda əlaqə saxlanılacaq.";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Вы приняли это предложение. С вами свяжутся в ближайшее время.";
-        } else {
-            text = "You have accepted this offer. You will be contacted soon.";
-        }
-        return text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Bu təklifi qəbul elədiz.Sizinlə yaxın zamanda əlaqə saxlanılacaq.";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Вы приняли это предложение. С вами свяжутся в ближайшее время.";
+//        } else {
+//            text = "You have accepted this offer. You will be contacted soon.";
+//        }
+        return text="";
     }
 
+    //
+
+    //
     public static String getLoadMoreText(Order userOrder) {
         String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Daha çox yüklə...";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Загрузи больше...";
-        } else {
-            text = "Load more...";
-        }
-        return text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Daha çox yüklə...";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Загрузи больше...";
+//        } else {
+//            text = "Load more...";
+//        }
+        return text="";
     }
+    //
 
+    //
     public static String noMoreLoads(Order userOrder) {
         String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Hələlik başqa təklif yoxdur.";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Других предложений пока нет.";
-        } else {
-            text = "There is no other offer yet.";
-        }
-        return text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Hələlik başqa təklif yoxdur.";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Других предложений пока нет.";
+//        } else {
+//            text = "There is no other offer yet.";
+//        }
+        return text="";
     }
+    //
 
     public static String acceptOffer(Order userOrder) {
         String text;
-        if (userOrder.getLanguage().name() == "AZ") {
-            text = "Təklifi qəbul elə";
-        } else if (userOrder.getLanguage().name() == "RU") {
-            text = "Прими предложение";
-        } else {
-            text = "Accept the offer";
-        }
-        return text;
+//        if (userOrder.getLanguage().name() == "AZ") {
+//            text = "Təklifi qəbul et";
+//        } else if (userOrder.getLanguage().name() == "RU") {
+//            text = "Прими предложение";
+//        } else {
+//            text = "Accept the offer";
+//        }
+        return text="";
     }
 
-    public static String getFromMyContact(Languages languages) {
-        String text;
-        if (languages.name() == "AZ") {
-            text = "Kontaktımdan götür";
-        } else if (languages.name() == "RU") {
-            text = "Возьми это у моего контакта";
-        } else {
-            text = "Take it from my contact";
-        }
-        return text+Emojis.Iphone;
-    }
+//    public String getFromMyContact(Languages languages) {
+//        String text;
+//        if (languages.name() == "AZ") {
+//            text = "Kontaktımdan götür";
+//        } else if (languages.name() == "RU") {
+//            text = "Возьми это у моего контакта";
+//        } else {
+//            text = "Take it from my contact";
+//        }
+//        return text + Emojis.Iphone;
+//    }
 
 
 }

@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.LoadMore.getLoadButtons;
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.noMoreLoads;
 
 @Service
 public class OfferService {
@@ -38,15 +37,17 @@ public class OfferService {
     private final OfferCache offerCache;
     private final OrderCache orderCache;
     private final RabbitMQService rabbitStopService;
+    private final LocaleMessageService messageService;
 
     public OfferService(UserOfferRepo userOfferRepo, ObjectMapper mapper, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
-                        RabbitMQService stopService,OrderCache orderCache) {
+                        RabbitMQService stopService,OrderCache orderCache,LocaleMessageService messageService) {
         this.userOfferRepo = userOfferRepo;
         this.mapper = mapper;
         this.tourAppBot = tourAppBot;
         this.offerCache = offerCache;
         this.rabbitStopService = stopService;
         this.orderCache=orderCache;
+        this.messageService=messageService;
     }
 
     public void save(Offer offer, MyUser user, boolean isFive) {
@@ -63,14 +64,15 @@ public class OfferService {
         List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         for (UserOffer item : offers) {
             String text = Emojis.Office+" "+ item.getAgencyName() + "\n" +Emojis.Phone +" "+ item.getAgencyNumber();
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId(), orderCache.get(userId)));
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId(), orderCache.get(userId),messageService));
             userOfferRepo.deleteById(item.getId());
         }
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
-            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F").replyMarkup(getLoadButtons(orderCache.get(userId))).build());
+            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F").replyMarkup(getLoadButtons(orderCache.get(userId),messageService)).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
-            callbackAnswer.add(SendMessage.builder().chatId(chatId).text(noMoreLoads(orderCache.get(userId))).build());
+            callbackAnswer.add(SendMessage.builder().chatId(chatId)
+                    .text(messageService.getMessage("no.more.load",orderCache.get(userId).getLanguage())).build());
         }
 
         return callbackAnswer;

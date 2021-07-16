@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Telegram bot class where Webhook extends and setted
@@ -127,7 +128,6 @@ public class TourAppBot extends TelegramWebhookBot {
         botCommands.add(new NewCommand());
         botCommands.add(new ContinueCommand());
         botCommands.add(new StopCommand());
-
         execute(SetMyCommands.builder().commands(botCommands).build());
     }
 

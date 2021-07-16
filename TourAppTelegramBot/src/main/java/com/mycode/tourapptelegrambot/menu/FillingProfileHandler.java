@@ -20,6 +20,8 @@ import com.mycode.tourapptelegrambot.repositories.OrderRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
+import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,6 +40,7 @@ import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.
 
 /**
  * This class for when bot ask question without inline keyboard button
+ *
  * @author Ali Guliyev
  * @version 1.0
  */
@@ -57,12 +60,14 @@ public class FillingProfileHandler implements InputMessageHandler {
     private final OrderRepo orderRepo;
     private final RabbitMQService rabbitMQService;
     private final UserRepo userRepo;
+    private final LocaleMessageService messageService;
 
 
     public FillingProfileHandler(QuestionActionRepo questionActionRepo,
                                  QuestionRepo questionRepo, OrderRepo orderRepo, QuestionIdAndNextCache questionIdAndNextCache,
                                  ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
-                                 OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo) {
+                                 OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo,
+                                 LocaleMessageService messageService) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
         this.orderRepo = orderRepo;
@@ -74,9 +79,12 @@ public class FillingProfileHandler implements InputMessageHandler {
         this.rabbitMQService = rabbitMQService;
         this.offerCache = offerCache;
         this.userRepo = userRepo;
+        this.messageService = messageService;
     }
 
-    /** This method for handle user message
+    /**
+     * This method for handle user message
+     *
      * @param message sended message by user
      * @return SendMessage
      */
@@ -91,8 +99,9 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * When bot not ask question with inline keyboard button program set current bot state FILLING_TOUR
-     * @apiNote  And when user input message has text program checks this getHandlerName method of this class
+     *
      * @return BotState
+     * @apiNote And when user input message has text program checks this getHandlerName method of this class
      */
 
     @Override
@@ -102,8 +111,9 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * This methods for process actions for user input
-     * @return SendMessage
+     *
      * @param inputMsg message which sended by user
+     * @return SendMessage
      */
 
     public SendMessage processUsersInput(Message inputMsg) {
@@ -161,7 +171,7 @@ public class FillingProfileHandler implements InputMessageHandler {
     /**
      * When question entity hasn't next,program enters this methods
      *
-     * @param userId   delete current cache of user
+     * @param userId    delete current cache of user
      * @param chatId    send ending message to user from bot
      * @param userOrder add current user order to database
      * @return SendMessage
@@ -170,7 +180,9 @@ public class FillingProfileHandler implements InputMessageHandler {
     private SendMessage replyQuestionNull(Long userId, String chatId, Order userOrder) {
         ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
         replyKeyboardRemove.setRemoveKeyboard(true);
-        SendMessage sendMessage = SendMessage.builder().chatId(chatId).text(sendEndingMessage(userOrder)).replyMarkup(replyKeyboardRemove).build();
+        SendMessage sendMessage = SendMessage.builder().chatId(chatId)
+                .text(messageService.getMessage("ending.msg", userOrder.getLanguage(), Emojis.SUCCESS_MARK))
+                .replyMarkup(replyKeyboardRemove).build();
         userOrder.setCreatedDate(new Date());
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -205,6 +217,7 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * When last answered correctly clear @Redis cache
+     *
      * @param userId clear cache of current user
      * @return void
      */
@@ -223,13 +236,14 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * This method for setting question info
-     * @apiNote  Prev -Previous question id
+     *
+     * @param userId   for @Redis cache
+     * @param question current question
+     * @return QuestionIdAndNext cache DTO
+     * @apiNote Prev -Previous question id
      * Next -Next question id
      * QuestionId-Question Action entity's id
      * Regex-Question entity's field for validation
-     * @param userId  for @Redis cache
-     * @param question current question
-     * @return QuestionIdAndNext cache DTO
      */
 
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, Long userId) {
@@ -247,12 +261,13 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * Mapping answer to object
-     * @apiNote  This method map dynamically to object by keyword
-     * Keyword comes from database and entity class filed name same as keyword
-     * @param userId for get data from cacha
-     * @param userOrder get field dynamically and set matched keyword to Order entity
+     *
+     * @param userId     for get data from cacha
+     * @param userOrder  get field dynamically and set matched keyword to Order entity
      * @param userAnswer data for setting to entity
      * @return SendMessage
+     * @apiNote This method map dynamically to object by keyword
+     * Keyword comes from database and entity class filed name same as keyword
      */
 
     @SneakyThrows

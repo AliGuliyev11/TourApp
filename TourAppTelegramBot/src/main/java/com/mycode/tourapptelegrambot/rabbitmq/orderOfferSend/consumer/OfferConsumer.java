@@ -7,6 +7,7 @@ import com.mycode.tourapptelegrambot.redis.RedisCache.OfferCache;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.services.OfferService;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
@@ -27,14 +28,16 @@ public class OfferConsumer {
     private final OfferCache offerCache;
     private final OfferService offerService;
     private final OrderCache orderCache;
+    private final LocaleMessageService messageService;
 
     public OfferConsumer(TourAppBot telegramBot, UserRepo userRepo, OfferCache offerCache, OfferService offerService,
-                         OrderCache orderCache) {
+                         OrderCache orderCache,LocaleMessageService messageService) {
         this.telegramBot = telegramBot;
         this.userRepo = userRepo;
         this.offerCache = offerCache;
         this.offerService = offerService;
         this.orderCache=orderCache;
+        this.messageService=messageService;
     }
 
     @SneakyThrows
@@ -48,12 +51,12 @@ public class OfferConsumer {
             if (count == 6) {
                 offerService.save(offer, user,false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
-                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()))).build());
+                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()),messageService)).build());
             } else if (count < 6) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
-                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId(),orderCache.get(user.getId())));
+                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId(),orderCache.get(user.getId()), messageService));
 
                 String text = Emojis.Office+" "+ offer.getAgencyName() + "\n" +Emojis.Phone +" "+ offer.getAgencyNumber();
                 sendPhoto.setCaption(text);

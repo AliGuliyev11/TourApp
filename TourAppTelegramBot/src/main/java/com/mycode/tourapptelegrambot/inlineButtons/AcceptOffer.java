@@ -1,6 +1,7 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
 import com.mycode.tourapptelegrambot.models.Order;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -11,11 +12,11 @@ import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.
 
 public class AcceptOffer {
 
-    public static InlineKeyboardMarkup getAcceptButtons(Long offerId, Order order) {
+    public static InlineKeyboardMarkup getAcceptButtons(Long offerId, Order order, LocaleMessageService messageService) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         InlineKeyboardButton buttonAz = new InlineKeyboardButton();
-        buttonAz.setText(acceptOffer(order));
+        buttonAz.setText(messageService.getMessage("accept.offer",order.getLanguage()));
 
         buttonAz.setCallbackData("Offer-" + offerId);
 

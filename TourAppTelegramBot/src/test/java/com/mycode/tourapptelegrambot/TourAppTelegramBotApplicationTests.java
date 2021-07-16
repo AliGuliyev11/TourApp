@@ -27,7 +27,6 @@ import java.util.List;
 
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
-import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.AskLanguage.getLanguageButtons;
 import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.*;
 import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
@@ -154,23 +153,23 @@ class TourAppTelegramBotApplicationTests {
         Assertions.assertEquals("Нет вопросов к тебе", getContinueMessage(order));
     }
 
-    @Test
-    void getBotLangMessageAz() {
-        Order order = Order.builder().language(Languages.AZ).build();
-        Assertions.assertEquals("Botun dili Azərbaycan dili olaraq təyin olundu", getBotLangMessage(order));
-    }
-
-    @Test
-    void getBotLangMessageEn() {
-        Order order = Order.builder().language(Languages.EN).build();
-        Assertions.assertEquals("Bot's language was designated as English", getBotLangMessage(order));
-    }
-
-    @Test
-    void getBotLangMessageRu() {
-        Order order = Order.builder().language(Languages.RU).build();
-        Assertions.assertEquals("Язык Ботуна был определен как русский", getBotLangMessage(order));
-    }
+//    @Test
+//    void getBotLangMessageAz() {
+//        Order order = Order.builder().language(Languages.AZ).build();
+//        Assertions.assertEquals("Botun dili Azərbaycan dili olaraq təyin olundu", getBotLangMessage(order));
+//    }
+//
+//    @Test
+//    void getBotLangMessageEn() {
+//        Order order = Order.builder().language(Languages.EN).build();
+//        Assertions.assertEquals("Bot's language was designated as English", getBotLangMessage(order));
+//    }
+//
+//    @Test
+//    void getBotLangMessageRu() {
+//        Order order = Order.builder().language(Languages.RU).build();
+//        Assertions.assertEquals("Язык Ботуна был определен как русский", getBotLangMessage(order));
+//    }
 
     @Test
     void getStartCacheMessageAz() {

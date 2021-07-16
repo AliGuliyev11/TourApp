@@ -14,7 +14,7 @@ import java.util.List;
 public class CalendarUtil {
     public static final String IGNORE = "ignore!@#$%^&";
 
-    public static final String[] WD = {"M", "T", "W", "T", "F", "S", "S"};
+    public static String[] WD = {"M", "T", "W", "T", "F", "S", "S"};
 
     public InlineKeyboardMarkup generateKeyboard(LocalDate date) {
 

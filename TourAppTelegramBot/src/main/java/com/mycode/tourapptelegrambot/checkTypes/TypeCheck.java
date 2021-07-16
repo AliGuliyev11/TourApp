@@ -1,13 +1,24 @@
 package com.mycode.tourapptelegrambot.checkTypes;
 
+/**This class for type checking
+ * @author Ali Guliyev
+ * @version 1.0*/
+
 public class TypeCheck {
 
-    /** Checking type for dynamic mapping */
+    /** Checking type for dynamic mapping
+     * @param type dynamic type for checking
+     * @return boolean*/
 
     public static boolean isPrimitive(Class<?> type) {
         return (type == int.class || type == long.class || type == double.class || type == float.class
                 || type == boolean.class || type == byte.class || type == char.class || type == short.class);
     }
+
+    /** Checking and converting type dynamically
+     * @param type dynamic type
+     * @param text text for convert
+     * */
 
     public static Object boxPrimitiveClass(Class<?> type, String text) {
         if (type == int.class) {

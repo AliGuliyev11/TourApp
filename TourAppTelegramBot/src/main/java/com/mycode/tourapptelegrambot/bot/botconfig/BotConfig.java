@@ -1,7 +1,7 @@
 package com.mycode.tourapptelegrambot.bot.botconfig;
 
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
-import com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade;
+import com.mycode.tourapptelegrambot.bot.botfacade.TelegramFacade;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -9,12 +9,12 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-import org.telegram.telegrambots.bots.DefaultBotOptions;
-import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 
-import javax.annotation.PostConstruct;
-//import org.telegram.telegrambots.meta.ApiContext;
-//import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
+
+/** This class for telegram bot configuration
+ * @author Ali Guliyev
+ * @version 1.0
+ */
 
 @Setter
 @Getter
@@ -26,21 +26,11 @@ public class BotConfig {
     private String botUserName;
     private String botToken;
 
-    private DefaultBotOptions.ProxyType proxyType;
-    private String proxyHost;
-    private int proxyPort;
-
 
     /** Bot configuration @Bean */
 
     @Bean
     public TourAppBot tourAppBot(TelegramFacade telegramFacade) {
-
-//        DefaultBotOptions options = ApiContext
-//                .getInstance(DefaultBotOptions.class);
-//        options.setProxyHost(proxyHost);
-//        options.setProxyPort(proxyPort);
-//        options.setProxyType(proxyType);
 
         TourAppBot tourAppBot = new TourAppBot(telegramFacade);
         tourAppBot.setBotUsername(botUserName);

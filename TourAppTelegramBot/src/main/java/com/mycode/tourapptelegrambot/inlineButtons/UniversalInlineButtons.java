@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
+import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.redis.RedisCache.MessageBoolCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentButtonTypeAndMessage;
 import com.mycode.tourapptelegrambot.redis.redisEntity.MessageAndBoolean;
@@ -19,6 +20,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.getFromMyContact;
 
 /**
  * This class for creating inline keyboard buttons dynamically
@@ -58,7 +61,7 @@ public class UniversalInlineButtons {
                 buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
                         .message(question.getQuestion()).build());
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
-                sendMessage.setReplyMarkup(addKeyboardButton(item.getText()));
+                sendMessage.setReplyMarkup(addKeyboardButton(item.getText(),question.getLanguages()));
                 return sendMessage;
             }
         }
@@ -75,27 +78,7 @@ public class UniversalInlineButtons {
     }
 
 
-//    @SneakyThrows
-//    @PostConstruct
-//    public void bot() {
-//
-//        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-//        replyKeyboardMarkup.setSelective(true);
-//        replyKeyboardMarkup.setResizeKeyboard(true);
-//        replyKeyboardMarkup.setOneTimeKeyboard(false);
-//
-//        List<KeyboardRow> keyboard = new ArrayList<>();
-//
-//        KeyboardRow row2 = new KeyboardRow();
-//        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
-//
-//        keyboard.add(row2);
-//        replyKeyboardMarkup.setKeyboard(keyboard);
-//        execute(SendMessage.builder().chatId("1797927400").text("fw").replyMarkup(replyKeyboardMarkup).build());
-//
-//    }
-
-    private ReplyKeyboardMarkup addKeyboardButton(String text){
+    private ReplyKeyboardMarkup addKeyboardButton(String text, Languages languages){
         final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
@@ -104,12 +87,14 @@ public class UniversalInlineButtons {
         List<KeyboardRow> keyboard = new ArrayList<>();
 
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
+        row2.add(KeyboardButton.builder().text(getFromMyContact(languages)).requestContact(true).build());
 
         keyboard.add(row2);
         replyKeyboardMarkup.setKeyboard(keyboard);
         return replyKeyboardMarkup;
     }
+
+
 
 
     private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword, Long id) {

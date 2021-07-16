@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.messages;
 
+import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.Order;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 
@@ -138,6 +139,30 @@ public class ValidationResponseMessages {
             text = "There is no other offer yet.";
         }
         return text;
+    }
+
+    public static String acceptOffer(Order userOrder) {
+        String text;
+        if (userOrder.getLanguage().name() == "AZ") {
+            text = "Təklifi qəbul elə";
+        } else if (userOrder.getLanguage().name() == "RU") {
+            text = "Прими предложение";
+        } else {
+            text = "Accept the offer";
+        }
+        return text;
+    }
+
+    public static String getFromMyContact(Languages languages) {
+        String text;
+        if (languages.name() == "AZ") {
+            text = "Kontaktımdan götür";
+        } else if (languages.name() == "RU") {
+            text = "Возьми это у моего контакта";
+        } else {
+            text = "Take it from my contact";
+        }
+        return text+Emojis.Iphone;
     }
 
 

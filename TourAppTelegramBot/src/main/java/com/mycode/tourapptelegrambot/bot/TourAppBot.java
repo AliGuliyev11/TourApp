@@ -1,30 +1,21 @@
 package com.mycode.tourapptelegrambot.bot;
 
-import com.mycode.tourapptelegrambot.bot.botfacace.TelegramFacade;
+import com.mycode.tourapptelegrambot.bot.botfacade.TelegramFacade;
 import com.mycode.tourapptelegrambot.bot.commands.ContinueCommand;
 import com.mycode.tourapptelegrambot.bot.commands.NewCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StartCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StopCommand;
-import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.ResourceUtils;
-import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
-import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
-import org.telegram.telegrambots.meta.api.methods.commands.GetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
@@ -32,6 +23,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+/** Telegram bot class where Webhook extends and setted
+ * @author Ali Guliyev
+ * @version 1.0 */
 
 public class TourAppBot extends TelegramWebhookBot {
 
@@ -42,7 +37,6 @@ public class TourAppBot extends TelegramWebhookBot {
     TelegramFacade telegramFacade;
 
     public TourAppBot(TelegramFacade telegramFacade) {
-//        super(options);
         this.telegramFacade = telegramFacade;
     }
 
@@ -50,6 +44,8 @@ public class TourAppBot extends TelegramWebhookBot {
     public String getBotToken() {
         return botToken;
     }
+
+    /** Every requests enters this method */
 
     @SneakyThrows
     @Override
@@ -65,12 +61,19 @@ public class TourAppBot extends TelegramWebhookBot {
         execute(replyMessageToUser);
     }
 
+    @Value("${voice.path}")
+    String path;
+
+    /** Speech to text
+     * @apiNote this method for download user voice file
+     * @param voice user voice*/
+
     @SneakyThrows
     public void voice(Voice voice) {
         GetFile getFile = new GetFile();
         getFile.setFileId(voice.getFileId());
         String filePath = execute(getFile).getFilePath();
-        File file = downloadFile(filePath, new File("src/main/resources/static/docs/audio-file2.flac"));
+        File file = downloadFile(filePath, new File(path));
         System.out.println(file.getName());
     }
 
@@ -96,18 +99,25 @@ public class TourAppBot extends TelegramWebhookBot {
         this.webhookPath = webhookPath;
     }
 
+    /** Method for sending photo
+     * @param chatId current private chat id
+     * @param imageCaption caption of image
+     * @param imagePath image path*/
+
     @SneakyThrows
     public void sendPhoto(String chatId, String imageCaption, String imagePath) {
         File image = ResourceUtils.getFile(imagePath);
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
-        Objects.requireNonNull(image.getName(), "photoName cannot be null!");
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setPhoto(inputFile);
         sendPhoto.setChatId(chatId);
         sendPhoto.setCaption(imageCaption);
         execute(sendPhoto);
     }
+
+
+    /** Setting bot commands */
 
     @SneakyThrows
     @PostConstruct
@@ -121,26 +131,11 @@ public class TourAppBot extends TelegramWebhookBot {
         execute(SetMyCommands.builder().commands(botCommands).build());
     }
 
-//    @SneakyThrows
-//    @PostConstruct
-//    public void bot() {
-//
-////        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-////        replyKeyboardMarkup.setSelective(true);
-////        replyKeyboardMarkup.setResizeKeyboard(true);
-////        replyKeyboardMarkup.setOneTimeKeyboard(false);
-////        List<KeyboardRow> keyboard = new ArrayList<>();
-////
-////        KeyboardRow row2 = new KeyboardRow();
-////        row2.add(KeyboardButton.builder().text("Kontakt").requestContact(true).build());
-//        ReplyKeyboardRemove replyKeyboardRemove=new ReplyKeyboardRemove();
-//        replyKeyboardRemove.setRemoveKeyboard(true);
-////        keyboard.add(row2);
-////        replyKeyboardMarkup.setKeyboard(keyboard);
-//        execute(SendMessage.builder().chatId("1797927400").text("fw").replyMarkup(replyKeyboardRemove).build());
-//
-//    }
-
+    /** Sending offer to user
+     * @param chatId current private chat id
+     * @param image agent's offer travel package image
+     * @param acceptButtons inline keyboard for accept travel package
+     * @param caption image caption*/
 
     @SneakyThrows
     public void sendOffer(String chatId, File image, String caption, InlineKeyboardMarkup acceptButtons) {

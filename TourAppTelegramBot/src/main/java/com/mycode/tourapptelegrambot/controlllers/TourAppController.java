@@ -7,6 +7,9 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+/** Controller
+ * @author Ali Guliyev
+ * @version 1.0*/
 
 @RestController
 public class TourAppController {

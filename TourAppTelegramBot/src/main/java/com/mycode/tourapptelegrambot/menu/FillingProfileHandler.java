@@ -1,7 +1,7 @@
 package com.mycode.tourapptelegrambot.menu;
 
 
-import com.mycode.tourapptelegrambot.bot.botfacace.InputMessageHandler;
+import com.mycode.tourapptelegrambot.bot.botfacade.InputMessageHandler;
 import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice.RabbitMQService;
@@ -38,6 +38,8 @@ import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.
 
 /**
  * This class for when bot ask question without inline keyboard button
+ * @author Ali Guliyev
+ * @version 1.0
  */
 
 @Slf4j
@@ -74,6 +76,11 @@ public class FillingProfileHandler implements InputMessageHandler {
         this.userRepo = userRepo;
     }
 
+    /** This method for handle user message
+     * @param message sended message by user
+     * @return SendMessage
+     */
+
     @Override
     public SendMessage handle(Message message) {
         if (botStateCache.get(message.getFrom().getId()).getBotState().equals(BotState.FILLING_TOUR)) {
@@ -84,7 +91,8 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * When bot not ask question with inline keyboard button program set current bot state FILLING_TOUR
-     * And when user input message has text program checks this getHandlerName method of this class
+     * @apiNote  And when user input message has text program checks this getHandlerName method of this class
+     * @return BotState
      */
 
     @Override
@@ -94,6 +102,8 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * This methods for process actions for user input
+     * @return SendMessage
+     * @param inputMsg message which sended by user
      */
 
     public SendMessage processUsersInput(Message inputMsg) {
@@ -148,6 +158,14 @@ public class FillingProfileHandler implements InputMessageHandler {
         return replyToUser;
     }
 
+    /**
+     * When question entity hasn't next,program enters this methods
+     *
+     * @param userId   delete current cache of user
+     * @param chatId    send ending message to user from bot
+     * @param userOrder add current user order to database
+     * @return SendMessage
+     */
 
     private SendMessage replyQuestionNull(Long userId, String chatId, Order userOrder) {
         ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
@@ -164,6 +182,16 @@ public class FillingProfileHandler implements InputMessageHandler {
         return sendMessage;
     }
 
+    /**
+     * When question entity has next,program enters this methods
+     *
+     * @param userId    checking current cache
+     * @param chatId    sending message to user from bot
+     * @param question  its current question given by bot
+     * @param messageId program catch this id for checking message statement and when user enters incorrect input delete this message
+     * @param userOrder add current user order to cache
+     * @return SendMessage
+     */
     private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, Order userOrder) {
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
                 questionIdAndNextCache, question, buttonMessageCache, messageBoolCache);
@@ -177,6 +205,8 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * When last answered correctly clear @Redis cache
+     * @param userId clear cache of current user
+     * @return void
      */
 
     private void deleteCache(Long userId) {
@@ -193,11 +223,13 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * This method for setting question info
-     * Prev -Previous question id
+     * @apiNote  Prev -Previous question id
      * Next -Next question id
      * QuestionId-Question Action entity's id
      * Regex-Question entity's field for validation
-     * UserId-For @Redis cache
+     * @param userId  for @Redis cache
+     * @param question current question
+     * @return QuestionIdAndNext cache DTO
      */
 
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, Long userId) {
@@ -215,8 +247,12 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     /**
      * Mapping answer to object
-     * This method map dynamically to object by keyword
+     * @apiNote  This method map dynamically to object by keyword
      * Keyword comes from database and entity class filed name same as keyword
+     * @param userId for get data from cacha
+     * @param userOrder get field dynamically and set matched keyword to Order entity
+     * @param userAnswer data for setting to entity
+     * @return SendMessage
      */
 
     @SneakyThrows

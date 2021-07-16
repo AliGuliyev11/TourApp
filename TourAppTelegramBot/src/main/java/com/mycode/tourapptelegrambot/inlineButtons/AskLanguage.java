@@ -10,6 +10,8 @@ import java.util.List;
 /**
  * This class for just /start case
  * When user send /start message program enters this method for creating language inline keyboard button
+ * @author Ali Guliyev
+ * @version 1.0
  */
 
 public class AskLanguage {

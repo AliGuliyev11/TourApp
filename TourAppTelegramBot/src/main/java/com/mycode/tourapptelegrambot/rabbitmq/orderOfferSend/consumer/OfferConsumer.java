@@ -53,7 +53,7 @@ public class OfferConsumer {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
-                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId()));
+                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId(),orderCache.get(user.getId())));
 
                 String text = Emojis.Office+" "+ offer.getAgencyName() + "\n" +Emojis.Phone +" "+ offer.getAgencyNumber();
                 sendPhoto.setCaption(text);

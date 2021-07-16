@@ -21,7 +21,8 @@ public enum Emojis {
     Beach(EmojiParser.parseToUnicode(":umbrella_on_ground:")),
     Clock(EmojiParser.parseToUnicode(":calendar:")),
     Phone(EmojiParser.parseToUnicode(":telephone_receiver:")),
-    Office(EmojiParser.parseToUnicode(":office"));
+    Office(EmojiParser.parseToUnicode(":office")),
+    Iphone(EmojiParser.parseToUnicode(":iphone:"));
 
 
 

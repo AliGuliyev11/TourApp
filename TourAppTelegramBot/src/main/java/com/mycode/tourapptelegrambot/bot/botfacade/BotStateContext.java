@@ -1,4 +1,4 @@
-package com.mycode.tourapptelegrambot.bot.botfacace;
+package com.mycode.tourapptelegrambot.bot.botfacade;
 
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** This class for check current bot state
+ * @author Ali Guliyev
+ * @version 1.0
+ * */
 
 @Component
 public class BotStateContext {

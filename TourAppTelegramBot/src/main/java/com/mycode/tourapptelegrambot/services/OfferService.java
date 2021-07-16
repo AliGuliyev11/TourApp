@@ -63,7 +63,7 @@ public class OfferService {
         List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         for (UserOffer item : offers) {
             String text = Emojis.Office+" "+ item.getAgencyName() + "\n" +Emojis.Phone +" "+ item.getAgencyNumber();
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId()));
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId(), orderCache.get(userId)));
             userOfferRepo.deleteById(item.getId());
         }
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {

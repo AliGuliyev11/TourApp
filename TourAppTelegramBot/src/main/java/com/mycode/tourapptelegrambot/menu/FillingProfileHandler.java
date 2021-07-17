@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.sendEndingMessage;
 
 /**
  * This class for when bot ask question without inline keyboard button
@@ -119,7 +118,7 @@ public class FillingProfileHandler implements InputMessageHandler {
     public SendMessage processUsersInput(Message inputMsg) {
         String usersAnswer;
 
-        if (inputMsg.isReply()) {
+        if (inputMsg.hasContact()) {
             usersAnswer = inputMsg.getContact().getPhoneNumber().replaceAll("[\\s]", "");
         } else {
             usersAnswer = inputMsg.getText();
@@ -141,6 +140,7 @@ public class FillingProfileHandler implements InputMessageHandler {
             botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         }
         if (botState.equals(BotState.FILLING_TOUR)) {
+            System.out.println(usersAnswer);
             if (!Pattern.matches(regex, usersAnswer)) {
                 replyToUser = new SendMessage(chatId, buttonMessageCache.get(userId).getMessage());
                 botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.VALIDATION).build());
@@ -219,7 +219,6 @@ public class FillingProfileHandler implements InputMessageHandler {
      * When last answered correctly clear @Redis cache
      *
      * @param userId clear cache of current user
-     * @return void
      */
 
     private void deleteCache(Long userId) {
@@ -262,7 +261,7 @@ public class FillingProfileHandler implements InputMessageHandler {
     /**
      * Mapping answer to object
      *
-     * @param userId     for get data from cacha
+     * @param userId     for get data from cache
      * @param userOrder  get field dynamically and set matched keyword to Order entity
      * @param userAnswer data for setting to entity
      * @return SendMessage

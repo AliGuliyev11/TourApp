@@ -8,20 +8,18 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.acceptOffer;
-
 public class AcceptOffer {
 
     public static InlineKeyboardMarkup getAcceptButtons(Long offerId, Order order, LocaleMessageService messageService) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
-        buttonAz.setText(messageService.getMessage("accept.offer",order.getLanguage()));
+        InlineKeyboardButton accept = new InlineKeyboardButton();
+        accept.setText(messageService.getMessage("accept.offer",order.getLanguage()));
 
-        buttonAz.setCallbackData("Offer-" + offerId);
+        accept.setCallbackData("Offer-" + offerId);
 
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(buttonAz);
+        keyboardButtonsRow1.add(accept);
 
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         rowList.add(keyboardButtonsRow1);

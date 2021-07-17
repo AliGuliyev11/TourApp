@@ -8,6 +8,7 @@ import com.ibm.watson.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
+import com.mycode.tourapptelegrambot.dto.BotStateSendMessage;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.*;
@@ -41,6 +42,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
@@ -147,7 +149,8 @@ public class TelegramFacade {
     private SendMessage messageHasNotText(Message message) {
         SendMessage replyMessage;
         if (buttonTypeAndMessage.get(message.getFrom().getId()) != null &&
-                buttonTypeAndMessage.get(message.getFrom().getId()).getQuestionType().equals(QuestionType.Button_Keyboard) && message.isReply()) {
+                buttonTypeAndMessage.get(message.getFrom().getId()).getQuestionType().equals(QuestionType.Button_Keyboard)
+                && message.hasContact()) {
             replyMessage = handleInputMessage(message);
         } else {
             telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
@@ -170,10 +173,10 @@ public class TelegramFacade {
         log.info("New message from User:{}, chatId: {},  with text: {}",
                 message.getFrom().getUserName(), message.getChatId(), message.getText());
 
-        if (!message.getText().equals("/new") && !message.getText().equals("/stop") && !message.getText().equals("/continue") && !message.getText().equals("/start") &&
-                (offerService.checkUserOffer(message.getFrom().getId()) || messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
+        if (!message.isCommand() && (offerService.checkUserOffer(message.getFrom().getId()) ||
+                messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                         !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()
-                )) {
+        )) {
             telegramBot.execute(DeleteMessage.builder().chatId(String.valueOf(message.getChatId())).messageId(message.getMessageId()).build());
             return SendMessage.builder().chatId(String.valueOf(message.getChatId())).text("").build();
         }
@@ -200,7 +203,7 @@ public class TelegramFacade {
      * @apiNote This API owns to IBM cloud
      * Authenticator-API key
      * setServiceUrl-API url
-     * @version 1.1
+     * for version 1.1
      */
 
     @SneakyThrows
@@ -237,67 +240,150 @@ public class TelegramFacade {
 
     @SneakyThrows
     private SendMessage handleInputMessage(Message message) {
-        String inputMsg;
-        if (message.isReply()) {
-            inputMsg = message.getContact().getPhoneNumber().replaceAll("[\\s]", "");
-        } else {
-            inputMsg = message.getText().toLowerCase();
-        }
+        String inputMsg = messageText(message);
         Long userId = message.getFrom().getId();
         String chatId = String.valueOf(message.getChatId());
         BotState botState = null;
         SendMessage replyMessage;
+        BotStateSendMessage botStateSendMessage;
         switch (inputMsg) {
             case "/new":
             case "/start":
-                if (orderCache.get(userId).getLanguage() != null) {
-                    replyMessage = SendMessage.builder().chatId(chatId)
-                            .text(messageService.getMessage("start.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
-                } else {
-                    replyMessage = startCase(userId, chatId);
-                    botState = BotState.FILLING_TOUR;
-                }
+                botStateSendMessage = switchStartCase(userId, chatId);
+                replyMessage = botStateSendMessage.getSendMessage();
+                botState = botStateSendMessage.getBotState();
                 break;
             case "/stop":
-                telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
-                clearCache(userId);
-                replyMessage = SendMessage.builder().chatId(chatId)
-                        .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+                replyMessage = stopCase(chatId, userId);
                 break;
             case "/continue":
-                if (buttonTypeAndMessage.get(userId) != null) {
-                    Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
-                    replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, message.getMessageId(), questionIdAndNextCache,
-                            question, buttonTypeAndMessage, messageBoolCache, messageService, orderCache.get(userId).getLanguage());
-                    botState = BotState.FILLING_TOUR;
-                } else {
-                    if (orderCache.get(userId).getLanguage() == null) {
-                        replyMessage = SendMessage.builder().chatId(chatId)
-                                .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
-                    } else {
-                        replyMessage = SendMessage.builder().chatId(chatId)
-                                .text(messageService.getMessage("continue.message", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
-                    }
-                }
-
+                botStateSendMessage = continueCase(userId, chatId, message.getMessageId());
+                replyMessage = botStateSendMessage.getSendMessage();
+                botState = botStateSendMessage.getBotState();
                 break;
             default:
-                if (buttonTypeAndMessage.get(userId) == null && orderCache.get(userId).getLanguage() != null) {
-                    replyMessage = SendMessage.builder().chatId(chatId)
-                            .text(messageService.getMessage("default.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
-                } else if (orderCache.get(userId).getLanguage() == null) {
-                    replyMessage = SendMessage.builder().chatId(chatId)
-                            .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
-                } else {
-                    botState = botStateCache.get(userId).getBotState();
-                    replyMessage = botStateContext.processInputMessage(botState, message);
-                }
+                botStateSendMessage = defaultCase(userId, chatId, message);
+                replyMessage = botStateSendMessage.getSendMessage();
+                botState = botStateSendMessage.getBotState();
                 break;
         }
 
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(botState).build());
         telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
         return replyMessage;
+    }
+
+    /**
+     * Method for getting message text
+     *
+     * @param message current message
+     * @return String
+     */
+
+    private String messageText(Message message) {
+        String inputMsg;
+        if (message.hasContact()) {
+            inputMsg = message.getContact().getPhoneNumber().replaceAll("[\\s]", "");
+        } else {
+            inputMsg = message.getText().toLowerCase();
+        }
+        return inputMsg;
+    }
+
+    /**
+     * When user input is /start program enters this method
+     *
+     * @param chatId private chat id
+     * @param userId current user id
+     * @return BotStateSendMessage see also dto package
+     * @apiNote This method's else statement go to startCase() method
+     */
+
+    private BotStateSendMessage switchStartCase(Long userId, String chatId) {
+        SendMessage replyMessage;
+        BotState botState = null;
+        if (orderCache.get(userId).getLanguage() != null) {
+            replyMessage = SendMessage.builder().chatId(chatId)
+                    .text(messageService.getMessage("start.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+        } else {
+            replyMessage = startCase(userId, chatId);
+            botState = BotState.FILLING_TOUR;
+        }
+        return BotStateSendMessage.builder().botState(botState).sendMessage(replyMessage).build();
+
+    }
+
+    /**
+     * When user input is not equal other cases program enters this method
+     *
+     * @param userId  current user id
+     * @param chatId  private chat id
+     * @param message current message
+     * @return BotStateSendMessage see also dto package
+     */
+
+    private BotStateSendMessage defaultCase(Long userId, String chatId, Message message) {
+        SendMessage replyMessage;
+        BotState botState = null;
+        if (buttonTypeAndMessage.get(userId) == null && orderCache.get(userId).getLanguage() != null) {
+            replyMessage = SendMessage.builder().chatId(chatId)
+                    .text(messageService.getMessage("default.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+        } else if (orderCache.get(userId).getLanguage() == null) {
+            replyMessage = SendMessage.builder().chatId(chatId)
+                    .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+        } else {
+            botState = botStateCache.get(userId).getBotState();
+            replyMessage = botStateContext.processInputMessage(botState, message);
+        }
+        return BotStateSendMessage.builder().botState(botState).sendMessage(replyMessage).build();
+    }
+
+    /**
+     * When user input is /continue program enters this method
+     *
+     * @param userId    current user id
+     * @param messageId current message id
+     * @param chatId    private chat id
+     * @return BotStateSendMessage see also dto package
+     */
+
+    public BotStateSendMessage continueCase(Long userId, String chatId, Integer messageId) {
+        SendMessage replyMessage;
+        BotState botState = null;
+        if (buttonTypeAndMessage.get(userId) != null) {
+            Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
+            replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
+                    question, buttonTypeAndMessage, messageBoolCache, messageService, orderCache.get(userId).getLanguage());
+            botState = BotState.FILLING_TOUR;
+        } else {
+            if (orderCache.get(userId).getLanguage() == null) {
+                replyMessage = SendMessage.builder().chatId(chatId)
+                        .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+            } else {
+                replyMessage = SendMessage.builder().chatId(chatId)
+                        .text(messageService.getMessage("continue.message", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+            }
+        }
+        return BotStateSendMessage.builder().botState(botState).sendMessage(replyMessage).build();
+    }
+
+    /**
+     * When user input is /stop program enters this method
+     *
+     * @param chatId private chat id
+     * @param userId current user id
+     * @return SendMessage
+     */
+
+    @SneakyThrows
+    private SendMessage stopCase(String chatId, Long userId) {
+        telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
+        clearCache(userId);
+        ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
+        replyKeyboardRemove.setRemoveKeyboard(true);
+        return SendMessage.builder().chatId(chatId)
+                .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage()))
+                .replyMarkup(replyKeyboardRemove).parseMode("HTML").build();
     }
 
     /**
@@ -324,9 +410,6 @@ public class TelegramFacade {
         orderCache.delete(userId);
         offerService.clearUserOffer(userId, uuid);
     }
-
-//    @Value("${startCase.photoPath}")
-//    String photoPath;
 
     /**
      * This method for start case
@@ -379,9 +462,7 @@ public class TelegramFacade {
             Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getNext()).orElse(null);
 
             if (question == null) {
-                botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
-                callBackAnswer.add(new SendMessage(chatId, messageService.getMessage("ending.msg", userOrder.getLanguage(), Emojis.SUCCESS_MARK)));
-                return callBackAnswer;
+                return questionNull(userId, chatId, userOrder);
             }
 
             findCallback(buttonQuery, userOrder, questionIdAndNextCache.get(userId));
@@ -404,6 +485,24 @@ public class TelegramFacade {
     }
 
     /**
+     * When question action not next program enters this method
+     *
+     * @param userId    current user id
+     * @param chatId    private chat id
+     * @param userOrder current user order
+     * @return List if BotApiMethod<?>
+     * @apiNote for callback query
+     */
+
+    private List<BotApiMethod<?>> questionNull(Long userId, String chatId, Order userOrder) {
+        List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
+        botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
+        callBackAnswer.add(new SendMessage(chatId, messageService.getMessage("ending.msg",
+                userOrder.getLanguage(), Emojis.SUCCESS_MARK)));
+        return callBackAnswer;
+    }
+
+    /**
      * When user accepts offer program enters this method
      *
      * @param buttonQuery callback query
@@ -417,7 +516,8 @@ public class TelegramFacade {
         Integer messageId = buttonQuery.getMessage().getMessageId();
         Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
         offerService.acceptOffer(offerId);
-        callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message", userOrder.getLanguage()), buttonQuery));
+        callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message",
+                userOrder.getLanguage()), buttonQuery));
         callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         return callBackAnswer;
     }

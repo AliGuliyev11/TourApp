@@ -12,6 +12,7 @@ import com.mycode.tourapptelegrambot.services.OfferService;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -40,6 +41,9 @@ public class OfferConsumer {
         this.messageService=messageService;
     }
 
+    @Value("${offer.count}")
+    private int maxOfferCount;
+
     @SneakyThrows
     @RabbitListener(queues = "offerQueue")
     public void onMessage(Offer offer) {
@@ -49,11 +53,11 @@ public class OfferConsumer {
             int count = offerCache.get(user.getId());
             System.out.println(count);
             count++;
-            if (count == 6) {
+            if (count == maxOfferCount) {
                 offerService.save(offer, user,false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
                         .replyMarkup(getLoadButtons(orderCache.get(user.getId()),messageService)).build());
-            } else if (count < 6) {
+            } else if (count < maxOfferCount) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());

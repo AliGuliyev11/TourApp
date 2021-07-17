@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.Offer;
 import com.mycode.tourapptelegrambot.models.MyUser;
@@ -13,6 +12,7 @@ import com.mycode.tourapptelegrambot.repositories.UserOfferRepo;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,7 +31,6 @@ import static com.mycode.tourapptelegrambot.inlineButtons.LoadMore.getLoadButton
 public class OfferService {
 
     private final UserOfferRepo userOfferRepo;
-    private final ObjectMapper mapper;
     private final ModelMapper modelMapper = new ModelMapper();
     private final TourAppBot tourAppBot;
     private final OfferCache offerCache;
@@ -39,10 +38,9 @@ public class OfferService {
     private final RabbitMQService rabbitStopService;
     private final LocaleMessageService messageService;
 
-    public OfferService(UserOfferRepo userOfferRepo, ObjectMapper mapper, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
+    public OfferService(UserOfferRepo userOfferRepo, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
                         RabbitMQService stopService, OrderCache orderCache, LocaleMessageService messageService) {
         this.userOfferRepo = userOfferRepo;
-        this.mapper = mapper;
         this.tourAppBot = tourAppBot;
         this.offerCache = offerCache;
         this.rabbitStopService = stopService;
@@ -58,30 +56,46 @@ public class OfferService {
         userOfferRepo.save(userOffer);
     }
 
+
     @SneakyThrows
     public List<BotApiMethod<?>> loadMore(Long userId, String chatId) {
         List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(5).collect(Collectors.toList());
-        List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
+
         for (UserOffer item : offers) {
             String text = Emojis.Office + " " + item.getAgencyName() + "\n" + Emojis.Phone + " " + item.getAgencyNumber();
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), text, getAcceptButtons(item.getId(), orderCache.get(userId), messageService));
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), text, getAcceptButtons(item.getId(),
+                    orderCache.get(userId), messageService));
             userOfferRepo.deleteById(item.getId());
         }
+
+        List<BotApiMethod<?>> callbackAnswer =checkUserOfferAvailability(userId,chatId);
+
+        saveOfferCache(userId, offers.size());
+        return callbackAnswer;
+    }
+
+    private List<BotApiMethod<?>> checkUserOfferAvailability(Long userId, String chatId) {
+        List<BotApiMethod<?>> callbackAnswer=new ArrayList<>();
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
-            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F").replyMarkup(getLoadButtons(orderCache.get(userId), messageService)).build());
+            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F")
+                    .replyMarkup(getLoadButtons(orderCache.get(userId), messageService)).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
             callbackAnswer.add(SendMessage.builder().chatId(chatId)
                     .text(messageService.getMessage("no.more.load", orderCache.get(userId).getLanguage())).build());
         }
-
-        if (offers.size() == 5) {
-            offerCache.save(OfferCount.builder().userId(userId).count(offers.size()+1).build());
-        }else{
-            offerCache.save(OfferCount.builder().userId(userId).count(offers.size()).build());
-        }
-
         return callbackAnswer;
+    }
+
+    @Value("${offer.count}")
+    private int maxOfferCount;
+
+    private void saveOfferCache(Long userId, int size) {
+        if (size == maxOfferCount) {
+            offerCache.save(OfferCount.builder().userId(userId).count(size + 1).build());
+        } else {
+            offerCache.save(OfferCount.builder().userId(userId).count(size).build());
+        }
     }
 
 

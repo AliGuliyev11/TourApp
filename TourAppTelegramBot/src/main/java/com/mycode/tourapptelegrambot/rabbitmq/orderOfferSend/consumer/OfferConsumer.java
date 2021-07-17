@@ -47,6 +47,7 @@ public class OfferConsumer {
         MyUser user = userRepo.getMyUserByUuid(offer.getUserId());
         if (user != null) {
             int count = offerCache.get(user.getId());
+            System.out.println(count);
             count++;
             if (count == 6) {
                 offerService.save(offer, user,false);

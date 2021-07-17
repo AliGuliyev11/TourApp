@@ -9,6 +9,7 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.redis.RedisCache.QuestionIdAndNextCache;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.joda.time.LocalDate;
@@ -32,7 +33,8 @@ public class UniversalInlineButtons {
 
     public SendMessage sendInlineKeyBoardMessage(Long userId, String chatId, int messageId, QuestionIdAndNextCache cache,
                                                  Question question, ButtonAndMessageCache buttonAndMessageCache,
-                                                 MessageBoolCache messageBoolCache) {
+                                                 MessageBoolCache messageBoolCache, LocaleMessageService localeMessageService,
+                                                 Languages languages) {
         SendMessage sendMessage = SendMessage.builder().text(question.getQuestion()).chatId(chatId).build();
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
@@ -54,7 +56,7 @@ public class UniversalInlineButtons {
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
-                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now()));
+                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now(),localeMessageService,languages));
                 return sendMessage;
             }else if (item.getType().equals(QuestionType.Button_Keyboard)){
                 buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)

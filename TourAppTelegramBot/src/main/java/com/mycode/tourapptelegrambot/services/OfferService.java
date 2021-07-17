@@ -40,14 +40,14 @@ public class OfferService {
     private final LocaleMessageService messageService;
 
     public OfferService(UserOfferRepo userOfferRepo, ObjectMapper mapper, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
-                        RabbitMQService stopService,OrderCache orderCache,LocaleMessageService messageService) {
+                        RabbitMQService stopService, OrderCache orderCache, LocaleMessageService messageService) {
         this.userOfferRepo = userOfferRepo;
         this.mapper = mapper;
         this.tourAppBot = tourAppBot;
         this.offerCache = offerCache;
         this.rabbitStopService = stopService;
-        this.orderCache=orderCache;
-        this.messageService=messageService;
+        this.orderCache = orderCache;
+        this.messageService = messageService;
     }
 
     public void save(Offer offer, MyUser user, boolean isFive) {
@@ -63,23 +63,29 @@ public class OfferService {
         List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(5).collect(Collectors.toList());
         List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         for (UserOffer item : offers) {
-            String text = Emojis.Office+" "+ item.getAgencyName() + "\n" +Emojis.Phone +" "+ item.getAgencyNumber();
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(),text,getAcceptButtons(item.getId(), orderCache.get(userId),messageService));
+            String text = Emojis.Office + " " + item.getAgencyName() + "\n" + Emojis.Phone + " " + item.getAgencyNumber();
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), text, getAcceptButtons(item.getId(), orderCache.get(userId), messageService));
             userOfferRepo.deleteById(item.getId());
         }
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
-            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F").replyMarkup(getLoadButtons(orderCache.get(userId),messageService)).build());
+            callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F").replyMarkup(getLoadButtons(orderCache.get(userId), messageService)).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
             callbackAnswer.add(SendMessage.builder().chatId(chatId)
-                    .text(messageService.getMessage("no.more.load",orderCache.get(userId).getLanguage())).build());
+                    .text(messageService.getMessage("no.more.load", orderCache.get(userId).getLanguage())).build());
+        }
+
+        if (offers.size() == 5) {
+            offerCache.save(OfferCount.builder().userId(userId).count(offers.size()+1).build());
+        }else{
+            offerCache.save(OfferCount.builder().userId(userId).count(offers.size()).build());
         }
 
         return callbackAnswer;
     }
 
 
-    public boolean checkUserOffer(Long userId){
+    public boolean checkUserOffer(Long userId) {
         return userOfferRepo.checkUserOffer(userId);
     }
 

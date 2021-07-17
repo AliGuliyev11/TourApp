@@ -1,6 +1,8 @@
 package com.mycode.tourapptelegrambot.utils;
 
 
+import com.mycode.tourapptelegrambot.enums.Languages;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -11,12 +13,13 @@ import java.util.List;
 
 /** This class for create calendar when QuestionType is Button_Calendar */
 
+
 public class CalendarUtil {
     public static final String IGNORE = "ignore!@#$%^&";
 
-    public static String[] WD = {"M", "T", "W", "T", "F", "S", "S"};
-
-    public InlineKeyboardMarkup generateKeyboard(LocalDate date) {
+//    public String[] WD = {"M", "T", "W", "T", "F", "S", "S"};
+//
+    public InlineKeyboardMarkup generateKeyboard(LocalDate date, LocaleMessageService localeMessageService, Languages languages) {
 
         if (date == null) {
             return null;
@@ -27,6 +30,7 @@ public class CalendarUtil {
         List<InlineKeyboardButton> headerRow = new ArrayList<>();
         headerRow.add(createButton(IGNORE, new SimpleDateFormat("MMM yyyy").format(date.toDate())));
         keyboard.add(headerRow);
+        String[] WD=localeMessageService.getMessage("weekdays",languages).split("[,]");
 
         List<InlineKeyboardButton> daysOfWeekRow = new ArrayList<>();
         for (String day : WD) {

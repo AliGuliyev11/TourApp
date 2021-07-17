@@ -51,9 +51,7 @@ import java.util.stream.Collectors;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 import static com.mycode.tourapptelegrambot.inlineButtons.AskLanguage.getLanguageButtons;
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.*;
 import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
-import static com.mycode.tourapptelegrambot.utils.CalendarUtil.WD;
 
 /**
  * This is main telegram bot class
@@ -254,7 +252,7 @@ public class TelegramFacade {
             case "/start":
                 if (orderCache.get(userId).getLanguage() != null) {
                     replyMessage = SendMessage.builder().chatId(chatId)
-                            .text(messageService.getMessage("start.cache",orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+                            .text(messageService.getMessage("start.cache", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                 } else {
                     replyMessage = startCase(userId, chatId);
                     botState = BotState.FILLING_TOUR;
@@ -270,7 +268,7 @@ public class TelegramFacade {
                 if (buttonTypeAndMessage.get(userId) != null) {
                     Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
                     replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, message.getMessageId(), questionIdAndNextCache,
-                            question, buttonTypeAndMessage, messageBoolCache);
+                            question, buttonTypeAndMessage, messageBoolCache, messageService, orderCache.get(userId).getLanguage());
                     botState = BotState.FILLING_TOUR;
                 } else {
                     if (orderCache.get(userId).getLanguage() == null) {
@@ -278,7 +276,7 @@ public class TelegramFacade {
                                 .text(messageService.getMessage("stop.continue", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                     } else {
                         replyMessage = SendMessage.builder().chatId(chatId)
-                                .text(messageService.getMessage("continue.message",orderCache.get(userId).getLanguage())).parseMode("HTML").build();
+                                .text(messageService.getMessage("continue.message", orderCache.get(userId).getLanguage())).parseMode("HTML").build();
                     }
                 }
 
@@ -382,7 +380,7 @@ public class TelegramFacade {
 
             if (question == null) {
                 botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
-                callBackAnswer.add(new SendMessage(chatId,messageService.getMessage("ending.msg",userOrder.getLanguage(),Emojis.SUCCESS_MARK)));
+                callBackAnswer.add(new SendMessage(chatId, messageService.getMessage("ending.msg", userOrder.getLanguage(), Emojis.SUCCESS_MARK)));
                 return callBackAnswer;
             }
 
@@ -419,7 +417,7 @@ public class TelegramFacade {
         Integer messageId = buttonQuery.getMessage().getMessageId();
         Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
         offerService.acceptOffer(offerId);
-        callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message",userOrder.getLanguage()), buttonQuery));
+        callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message", userOrder.getLanguage()), buttonQuery));
         callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         return callBackAnswer;
     }
@@ -444,7 +442,7 @@ public class TelegramFacade {
         if (callBackAnswer.contains(null)) {
             callBackAnswer = callBackAnswer.stream().filter(Objects::nonNull).collect(Collectors.toList());
             callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
-                    question, buttonTypeAndMessage, messageBoolCache));
+                    question, buttonTypeAndMessage, messageBoolCache, messageService, userOrder.getLanguage()));
         }
         return callBackAnswer;
     }
@@ -469,7 +467,7 @@ public class TelegramFacade {
 
         if (currentButtonTypeAndMessage.getQuestionType().equals(QuestionType.Button)) {
             callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
-                    question, buttonTypeAndMessage, messageBoolCache));
+                    question, buttonTypeAndMessage, messageBoolCache, messageService, orderCache.get(userId).getLanguage()));
             callBackAnswer.add(EditMessageReplyMarkup.builder().chatId(chatId).messageId(messageId).replyMarkup(null).build());
 
         } else {
@@ -498,7 +496,8 @@ public class TelegramFacade {
         callBackAnswer.add(getLanguageType(buttonQuery, userOrder));
         callBackAnswer.add(new SendMessage(String.valueOf(chatId), userOrder.getLanguage().name()));
         callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
-                questionRepo.getFirstQuestionByLanguage(userOrder.getLanguage().name()), buttonTypeAndMessage, messageBoolCache));
+                questionRepo.getFirstQuestionByLanguage(userOrder.getLanguage().name()), buttonTypeAndMessage, messageBoolCache
+                , messageService, userOrder.getLanguage()));
 
         callBackAnswer.add(EditMessageReplyMarkup.builder().chatId(String.valueOf(chatId)).messageId(messageId).replyMarkup(null).build());
         return callBackAnswer;
@@ -519,8 +518,9 @@ public class TelegramFacade {
             callBackAnswer = getNextCalendar(time, buttonQuery);
         } else if (buttonQuery.getData().equals("<")) {
             callBackAnswer = getPrevCalendar(time, buttonQuery, userOrder);
-        } else if (Arrays.stream(WD).anyMatch(a -> a.equals(buttonQuery.getData())) || buttonQuery.getData().equals(IGNORE)) {
-            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("ignore.message",userOrder.getLanguage(),Emojis.Times), buttonQuery));
+        } else if (Arrays.stream(messageService.getMessage("weekdays", userOrder.getLanguage()).split("[,]"))
+                .anyMatch(a -> a.equals(buttonQuery.getData())) || buttonQuery.getData().equals(IGNORE)) {
+            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("ignore.message", userOrder.getLanguage(), Emojis.Times), buttonQuery));
         } else {
             BotApiMethod<?> answer = findCallback(buttonQuery, userOrder, questionIdAndNextCache.get(buttonQuery.getFrom().getId()));
             if (answer != null) {
@@ -557,7 +557,8 @@ public class TelegramFacade {
         calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
         callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
-                .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))).build());
+                .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time),
+                        messageService, orderCache.get(userId).getLanguage())).build());
         return callBackAnswer;
     }
 
@@ -577,13 +578,13 @@ public class TelegramFacade {
         final String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
         final int messageId = buttonQuery.getMessage().getMessageId();
         if (time == 0) {
-            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("prev.calendar",userOrder.getLanguage(),Emojis.Times), buttonQuery));
+            callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("prev.calendar", userOrder.getLanguage(), Emojis.Times), buttonQuery));
         } else {
             time--;
             calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
 
             callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
-                    .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time))).build());
+                    .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time), messageService, userOrder.getLanguage())).build());
 
             callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
         }
@@ -646,7 +647,7 @@ public class TelegramFacade {
         Object text = buttonQuery.getData();
         LocalDate localDate = getLocaleDate(text.toString());
         if (localDate.isBefore(LocalDate.now())) {
-            return sendAnswerCallbackQuery(messageService.getMessage("prev.calendar",userOrder.getLanguage(),Emojis.Times), buttonQuery);
+            return sendAnswerCallbackQuery(messageService.getMessage("prev.calendar", userOrder.getLanguage(), Emojis.Times), buttonQuery);
         }
         Date date = localDate.toDate();
         field.set(userOrder, date);

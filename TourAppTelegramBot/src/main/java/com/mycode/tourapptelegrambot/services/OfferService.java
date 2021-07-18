@@ -2,6 +2,7 @@ package com.mycode.tourapptelegrambot.services;
 
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.Offer;
+import com.mycode.tourapptelegrambot.dto.ReplyToOffer;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.models.UserOffer;
 import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice.RabbitMQService;
@@ -57,9 +58,11 @@ public class OfferService {
     }
 
 
+    @Value("${offer.count}")
+    private int maxOfferCount;
     @SneakyThrows
     public List<BotApiMethod<?>> loadMore(Long userId, String chatId) {
-        List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(5).collect(Collectors.toList());
+        List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(maxOfferCount-1).collect(Collectors.toList());
 
         for (UserOffer item : offers) {
             String text = Emojis.Office + " " + item.getAgencyName() + "\n" + Emojis.Phone + " " + item.getAgencyNumber();
@@ -87,14 +90,15 @@ public class OfferService {
         return callbackAnswer;
     }
 
-    @Value("${offer.count}")
-    private int maxOfferCount;
+
 
     private void saveOfferCache(Long userId, int size) {
         if (size == maxOfferCount) {
             offerCache.save(OfferCount.builder().userId(userId).count(size + 1).build());
         } else {
-            offerCache.save(OfferCount.builder().userId(userId).count(size).build());
+            int count=offerCache.get(userId)>=maxOfferCount?0:offerCache.get(userId);
+            int offerCount=count+size;
+            offerCache.save(OfferCount.builder().userId(userId).count(offerCount!=5?offerCount:offerCount+1).build());
         }
     }
 
@@ -108,9 +112,10 @@ public class OfferService {
         return userOfferRepo.findById(offerId).get();
     }
 
-    public void acceptOffer(Long offerId) {
+    public void acceptOffer(Long offerId,String phoneNumber) {
         System.out.println(offerId);
-        rabbitStopService.reply(offerId);
+        ReplyToOffer replyToOffer= ReplyToOffer.builder().offerId(offerId).phoneNumber(phoneNumber).build();
+        rabbitStopService.reply(replyToOffer);
     }
 
 

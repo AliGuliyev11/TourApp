@@ -13,7 +13,6 @@ public class LocaleMessageService {
 
     public LocaleMessageService(MessageSource messageSource) {
         this.messageSource = messageSource;
-//        this.locale = Locale.getDefault();
     }
 
 

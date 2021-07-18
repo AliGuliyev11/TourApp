@@ -132,7 +132,18 @@ public class FillingProfileHandler implements InputMessageHandler {
 
         return getReplyForBotState(botState, userId, chatId, messageId, usersAnswer, regex, userOrder, inputMsg);
     }
-    
+
+    /** This method for sending message with the help of current bot state
+     * @param botState cached bot state
+     * @param userId current user id
+     * @param chatId private chat id
+     * @param messageId current mesage id
+     * @param usersAnswer user answer to bot question
+     * @param regex question validation regex
+     * @param userOrder current cached user order
+     * @param inputMsg current message
+     * @return SendMessage
+     * */
 
     private SendMessage getReplyForBotState(BotState botState, Long userId, String chatId, int messageId, String usersAnswer,
                                             String regex, Order userOrder, Message inputMsg) {

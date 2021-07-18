@@ -1,6 +1,8 @@
 package com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice;
 
+import com.mycode.tourapptelegrambot.dto.ReplyToOffer;
 import com.mycode.tourapptelegrambot.models.Order;
+import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitmqconfig.RabbitMQConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +15,12 @@ public class RabbitMQService {
     }
 
     public void send(Order order){
-        template.convertAndSend("orderExchange","orderKey",order);
+        template.convertAndSend(RabbitMQConfig.ORDER_EXCHANGE,RabbitMQConfig.ORDER_KEY,order);
     }
     public void stop(String uuid){
-        template.convertAndSend("stopOrderExchange","stopOrderKey",uuid);
+        template.convertAndSend(RabbitMQConfig.STOP_ORDER_EXCHANGE,RabbitMQConfig.STOP_ORDER_KEY,uuid);
     }
-    public void reply(Long offerId){
-        template.convertAndSend("offerReplyExchange","offerReplyKey",offerId);
+    public void reply(ReplyToOffer reply){
+        template.convertAndSend(RabbitMQConfig.OFFER_REPLY_EXCHANGE,RabbitMQConfig.OFFER_REPLY_KEY,reply);
     }
 }

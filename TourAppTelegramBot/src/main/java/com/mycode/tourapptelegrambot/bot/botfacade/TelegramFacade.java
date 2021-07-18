@@ -515,7 +515,9 @@ public class TelegramFacade {
         String chatId = String.valueOf(buttonQuery.getMessage().getChatId());
         Integer messageId = buttonQuery.getMessage().getMessageId();
         Long offerId = Long.valueOf(buttonQuery.getData().substring(6));
-        offerService.acceptOffer(offerId);
+        Long userId=buttonQuery.getFrom().getId();
+        MyUser myUser=userRepo.findById(userId).get();
+        offerService.acceptOffer(offerId,myUser.getPhoneNumber());
         callBackAnswer.add(sendAnswerCallbackQuery(messageService.getMessage("accepted.message",
                 userOrder.getLanguage()), buttonQuery));
         callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());

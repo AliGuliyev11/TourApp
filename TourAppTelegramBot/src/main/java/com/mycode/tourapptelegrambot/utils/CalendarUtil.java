@@ -17,8 +17,6 @@ import java.util.List;
 public class CalendarUtil {
     public static final String IGNORE = "ignore!@#$%^&";
 
-//    public String[] WD = {"M", "T", "W", "T", "F", "S", "S"};
-//
     public InlineKeyboardMarkup generateKeyboard(LocalDate date, LocaleMessageService localeMessageService, Languages languages) {
 
         if (date == null) {

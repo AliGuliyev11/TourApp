@@ -792,7 +792,7 @@ public class TelegramFacade {
      * @return @org.joda.time LocalDate
      */
 
-    private LocalDate getLocaleDate(String text) {
+    public LocalDate getLocaleDate(String text) {
         DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
         DateTime dateTime = FORMATTER.parseDateTime(text);
         return dateTime.toLocalDate();

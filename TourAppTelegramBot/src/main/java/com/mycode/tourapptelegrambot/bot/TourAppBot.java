@@ -135,16 +135,15 @@ public class TourAppBot extends TelegramWebhookBot {
      * @param chatId current private chat id
      * @param image agent's offer travel package image
      * @param acceptButtons inline keyboard for accept travel package
-     * @param caption image caption*/
+     */
 
     @SneakyThrows
-    public void sendOffer(String chatId, File image, String caption, InlineKeyboardMarkup acceptButtons) {
+    public void sendOffer(String chatId, File image, InlineKeyboardMarkup acceptButtons) {
         SendPhoto sendPhoto = new SendPhoto();
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
         sendPhoto.setPhoto(inputFile);
         sendPhoto.setChatId(chatId);
-        sendPhoto.setCaption(caption);
         sendPhoto.setReplyMarkup(acceptButtons);
         execute(sendPhoto);
     }

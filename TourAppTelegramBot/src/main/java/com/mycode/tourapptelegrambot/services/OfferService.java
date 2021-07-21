@@ -50,8 +50,10 @@ public class OfferService {
     }
 
     public void save(Offer offer, MyUser user, boolean isFive) {
-        UserOffer userOffer = modelMapper.map(offer, UserOffer.class);
-        modelMapper.getConfiguration().setAmbiguityIgnored(true);
+        UserOffer userOffer = new UserOffer();
+        userOffer.setUserId(offer.getUserId());
+        userOffer.setOfferId(offer.getOfferId());
+        userOffer.setFile(offer.getFile());
         userOffer.setMyUser(user);
         userOffer.setFirstFive(isFive);
         userOfferRepo.save(userOffer);
@@ -65,8 +67,7 @@ public class OfferService {
         List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(maxOfferCount-1).collect(Collectors.toList());
 
         for (UserOffer item : offers) {
-            String text = Emojis.Office + " " + item.getAgencyName() + "\n" + Emojis.Phone + " " + item.getAgencyNumber();
-            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), text, getAcceptButtons(item.getId(),
+            tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), getAcceptButtons(item.getOfferId(),
                     orderCache.get(userId), messageService));
             userOfferRepo.deleteById(item.getId());
         }

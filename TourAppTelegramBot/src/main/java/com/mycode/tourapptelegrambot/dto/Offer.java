@@ -15,20 +15,16 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Offer implements Serializable {
-    Long id;
+    Long offerId;
     String userId;
     File file;
-    String agencyName;
-    String agencyNumber;
 
     @Override
     public String toString() {
         return "Offer{" +
-                "id=" + id +
+                "offerId=" + offerId +
                 ", userId='" + userId + '\'' +
                 ", file=" + file +
-                ", agencyName='" + agencyName + '\'' +
-                ", agencyNumber='" + agencyNumber + '\'' +
                 '}';
     }
 }

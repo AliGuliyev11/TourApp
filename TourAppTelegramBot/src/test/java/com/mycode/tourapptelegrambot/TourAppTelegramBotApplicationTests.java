@@ -74,11 +74,8 @@ class TourAppTelegramBotApplicationTests {
     void mapOffer() {
 
         Offer offer = new Offer();
-        offer.setId(155l);
         offer.setUserId("3");
         offer.setFile(new File("src/main/resources/static/docs/image.png"));
-        offer.setAgencyName("Name");
-        offer.setAgencyNumber("number");
 
         MyUser myUser = MyUser.builder().id(1l).chatId("2").uuid("13232f").build();
         UserOffer converted = modelMapper.map(offer, UserOffer.class);
@@ -90,8 +87,6 @@ class TourAppTelegramBotApplicationTests {
         userOffer.setId(155l);
         userOffer.setUserId("3");
         userOffer.setFile(new File("src/main/resources/static/docs/image.png"));
-        userOffer.setAgencyName("Name");
-        userOffer.setAgencyNumber("number");
         userOffer.setFirstFive(true);
         userOffer.setMyUser(myUser);
 

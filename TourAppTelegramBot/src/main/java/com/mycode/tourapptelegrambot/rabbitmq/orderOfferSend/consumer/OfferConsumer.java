@@ -61,10 +61,7 @@ public class OfferConsumer {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
-                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getId(),orderCache.get(user.getId()), messageService));
-
-                String text = Emojis.Office+" "+ offer.getAgencyName() + "\n" +Emojis.Phone +" "+ offer.getAgencyNumber();
-                sendPhoto.setCaption(text);
+                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(),orderCache.get(user.getId()), messageService));
                 telegramBot.execute(sendPhoto);
                 offerService.save(offer, user,true);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());

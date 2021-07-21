@@ -3,9 +3,7 @@ package com.mycode.tourapptelegrambot.models;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.File;
 import java.util.Objects;
 
@@ -20,11 +18,11 @@ import java.util.Objects;
 public class UserOffer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String userId;
+    Long offerId;
     File file;
-    String agencyName;
-    String agencyNumber;
     @ManyToOne
     MyUser myUser;
     boolean isFirstFive;
@@ -35,11 +33,8 @@ public class UserOffer {
                 "id=" + id +
                 ", userId='" + userId + '\'' +
                 ", file=" + file +
-                ", agencyName='" + agencyName + '\'' +
-                ", agencyNumber='" + agencyNumber + '\'' +
                 ", myUser=" + myUser +
                 ", isFirstFive=" + isFirstFive +
                 '}';
     }
-
 }

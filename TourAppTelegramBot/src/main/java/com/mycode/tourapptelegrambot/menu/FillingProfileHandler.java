@@ -196,10 +196,6 @@ public class FillingProfileHandler implements InputMessageHandler {
                 .text(messageService.getMessage("ending.msg", userOrder.getLanguage(), Emojis.SUCCESS_MARK))
                 .replyMarkup(replyKeyboardRemove).build();
         userOrder.setCreatedDate(new Date());
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.HOUR_OF_DAY, 24);
-        userOrder.setExpiredDate(calendar.getTime());
         orderRepo.save(userOrder);
         rabbitMQService.send(userOrder);
         deleteCache(userId);

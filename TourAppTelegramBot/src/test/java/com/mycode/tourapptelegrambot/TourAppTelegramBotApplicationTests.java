@@ -45,7 +45,6 @@ import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveCla
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.AskLanguage.getLanguageButtons;
-import static com.mycode.tourapptelegrambot.messages.ValidationResponseMessages.*;
 import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
 
 

@@ -42,7 +42,6 @@ public class Order implements Serializable {
     String chatId;
     String userId;
     Date createdDate;
-    Date expiredDate;
 
     @Override
     public String toString() {
@@ -56,10 +55,9 @@ public class Order implements Serializable {
                 ", Ordertraveller=" + Ordertraveller +
                 ", Orderbudget=" + Orderbudget +
                 ", Orderdateto=" + Orderdateto +
-                ", chatId=" + chatId +
-                ", userId=" + userId +
+                ", chatId='" + chatId + '\'' +
+                ", userId='" + userId + '\'' +
                 ", createdDate=" + createdDate +
-                ", expiredDate=" + expiredDate +
                 '}';
     }
 }

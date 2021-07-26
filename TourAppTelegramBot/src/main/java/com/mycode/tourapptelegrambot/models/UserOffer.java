@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -27,14 +28,4 @@ public class UserOffer {
     MyUser myUser;
     boolean isFirstFive;
 
-    @Override
-    public String toString() {
-        return "UserOffer{" +
-                "id=" + id +
-                ", userId='" + userId + '\'' +
-                ", file=" + file +
-                ", myUser=" + myUser +
-                ", isFirstFive=" + isFirstFive +
-                '}';
-    }
 }

@@ -41,6 +41,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -173,7 +174,7 @@ public class TelegramFacade {
         log.info("New message from User:{}, chatId: {},  with text: {}",
                 message.getFrom().getUserName(), message.getChatId(), message.getText());
 
-        if (!message.isCommand() && (offerService.checkUserOffer(message.getFrom().getId()) ||
+        if (!checkIsCommand(message.getText()) && (offerService.checkUserOffer(message.getFrom().getId()) ||
                 messageBoolCache.get(update.getMessage().getFrom().getId()) != null &&
                         !messageBoolCache.get(update.getMessage().getFrom().getId()).getSend()
         )) {
@@ -182,6 +183,17 @@ public class TelegramFacade {
         }
         replyMessage = handleInputMessage(message);
         return replyMessage;
+    }
+
+    /** Check message text is command or  not
+     * @param text current message text
+     * @return boolean */
+
+    private boolean checkIsCommand(String text){
+        if (text.equals("/start") || text.equals("/stop") || text.equals("/continue")){
+            return true;
+        }
+        return false;
     }
 
 
@@ -247,7 +259,6 @@ public class TelegramFacade {
         SendMessage replyMessage;
         BotStateSendMessage botStateSendMessage;
         switch (inputMsg) {
-            case "/new":
             case "/start":
                 botStateSendMessage = switchStartCase(userId, chatId);
                 replyMessage = botStateSendMessage.getSendMessage();
@@ -657,8 +668,7 @@ public class TelegramFacade {
         List<BotApiMethod<?>> callBackAnswer = new ArrayList<>();
         time++;
         calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
-        callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
-        callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
+        callBackAnswer.add(EditMessageText.builder().chatId(chatId).messageId(messageId).text("Calendar" + Emojis.Clock)
                 .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time),
                         messageService, orderCache.get(userId).getLanguage())).build());
         return callBackAnswer;
@@ -670,7 +680,7 @@ public class TelegramFacade {
      * @param time        current cached time for plus month
      * @param buttonQuery callback query
      * @param userOrder   current user order
-     * @return LIst of BotApiMethod<?>
+     * @return List of BotApiMethod<?>
      * @apiNote If previous month @isBefore @LocaleDate.now() program send user callback answer
      */
 
@@ -685,10 +695,9 @@ public class TelegramFacade {
             time--;
             calendarCache.save(CalendarTime.builder().userId(userId).time(time).build());
 
-            callBackAnswer.add(SendMessage.builder().chatId(chatId).text("Calendar" + Emojis.Clock)
-                    .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time), messageService, userOrder.getLanguage())).build());
-
-            callBackAnswer.add(DeleteMessage.builder().chatId(chatId).messageId(messageId).build());
+            callBackAnswer.add(EditMessageText.builder().chatId(chatId).messageId(messageId).text("Calendar" + Emojis.Clock)
+                    .replyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now().plusMonths(time),
+                            messageService, userOrder.getLanguage())).build());
         }
         return callBackAnswer;
     }

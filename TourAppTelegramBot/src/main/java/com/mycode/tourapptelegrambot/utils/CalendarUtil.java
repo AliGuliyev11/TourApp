@@ -11,7 +11,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-/** This class for create calendar when QuestionType is Button_Calendar */
+/**
+ * This class for create calendar when QuestionType is Button_Calendar
+ */
 
 
 public class CalendarUtil {
@@ -28,7 +30,7 @@ public class CalendarUtil {
         List<InlineKeyboardButton> headerRow = new ArrayList<>();
         headerRow.add(createButton(IGNORE, new SimpleDateFormat("MMM yyyy").format(date.toDate())));
         keyboard.add(headerRow);
-        String[] WD=localeMessageService.getMessage("weekdays",languages).split("[,]");
+        String[] WD = localeMessageService.getMessage("weekdays", languages).split("[,]");
 
         List<InlineKeyboardButton> daysOfWeekRow = new ArrayList<>();
         for (String day : WD) {
@@ -52,7 +54,7 @@ public class CalendarUtil {
         controlsRow.add(createButton(">", ">"));
         keyboard.add(controlsRow);
 
-        InlineKeyboardMarkup inlineKeyboardMarkup=new InlineKeyboardMarkup();
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(keyboard);
 
         return inlineKeyboardMarkup;
@@ -71,7 +73,15 @@ public class CalendarUtil {
         }
         for (int j = shift; j < 7; j++) {
             if (day <= (date.dayOfMonth().getMaximumValue())) {
-                row.add(createButton(callbackDate.toString(), Integer.toString(day++)));
+                if (date.isEqual(LocalDate.now()) && day == LocalDate.now().getDayOfMonth()) {
+                    row.add(createButton(callbackDate.toString(), "" + Emojis.Clock));
+                    day++;
+                } else if (date.isBefore(LocalDate.now()) &&  day < LocalDate.now().getDayOfMonth()) {
+                    row.add(createButton(IGNORE, " "));
+                    day++;
+                } else {
+                    row.add(createButton(callbackDate.toString(), Integer.toString(day++)));
+                }
                 callbackDate = callbackDate.plusDays(1);
             } else {
                 row.add(createButton(IGNORE, " "));

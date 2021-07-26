@@ -2,7 +2,6 @@ package com.mycode.tourapptelegrambot.bot;
 
 import com.mycode.tourapptelegrambot.bot.botfacade.TelegramFacade;
 import com.mycode.tourapptelegrambot.bot.commands.ContinueCommand;
-import com.mycode.tourapptelegrambot.bot.commands.NewCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StartCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StopCommand;
 import lombok.SneakyThrows;
@@ -22,8 +21,6 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 
 /** Telegram bot class where Webhook extends and setted
  * @author Ali Guliyev
@@ -125,7 +122,6 @@ public class TourAppBot extends TelegramWebhookBot {
     public void botCommands() {
         List<BotCommand> botCommands = new ArrayList<>();
         botCommands.add(new StartCommand());
-        botCommands.add(new NewCommand());
         botCommands.add(new ContinueCommand());
         botCommands.add(new StopCommand());
         execute(SetMyCommands.builder().commands(botCommands).build());

@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.redis.redisEntity;
 
-import com.mycode.tourapptelegrambot.enums.Languages;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -13,11 +12,11 @@ import java.util.Map;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("TelegramMapCache")
+@RedisHash("TelegramOrderMapCache")
 public class CurrentOrder implements Serializable {
     @Id
     Long userId;
-    Languages languages;
+    String languages;
     Map<String,String> order;
 
     @Override

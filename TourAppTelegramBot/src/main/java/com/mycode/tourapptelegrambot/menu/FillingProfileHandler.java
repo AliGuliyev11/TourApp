@@ -4,7 +4,6 @@ package com.mycode.tourapptelegrambot.menu;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycode.tourapptelegrambot.bot.botfacade.InputMessageHandler;
 import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
-import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice.RabbitMQService;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
@@ -17,11 +16,10 @@ import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.inlineButtons.UniversalInlineButtons;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
-import com.mycode.tourapptelegrambot.services.LocaleMessageService;
-import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -32,6 +30,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 
 import java.util.Date;
 import java.util.regex.Pattern;
+
+import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 
 /**
  * This class for when bot ask question without inline keyboard button
@@ -54,14 +54,14 @@ public class FillingProfileHandler implements InputMessageHandler {
     private final QuestionRepo questionRepo;
     private final RabbitMQService rabbitMQService;
     private final UserRepo userRepo;
-    private final LocaleMessageService messageService;
+    private final BotMessageRepo botMessageRepo;
 
 
     public FillingProfileHandler(QuestionActionRepo questionActionRepo,
                                  QuestionRepo questionRepo, QuestionIdAndNextCache questionIdAndNextCache,
                                  ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
                                  OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo,
-                                 LocaleMessageService messageService) {
+                                 BotMessageRepo botMessageRepo) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
         this.questionIdAndNextCache = questionIdAndNextCache;
@@ -72,7 +72,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         this.rabbitMQService = rabbitMQService;
         this.offerCache = offerCache;
         this.userRepo = userRepo;
-        this.messageService = messageService;
+        this.botMessageRepo = botMessageRepo;
     }
 
     /**
@@ -117,6 +117,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         } else {
             usersAnswer = inputMsg.getText();
         }
+
         Long userId = inputMsg.getFrom().getId();
         String chatId = String.valueOf(inputMsg.getChatId());
         int messageId = inputMsg.getMessageId();
@@ -189,7 +190,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
         replyKeyboardRemove.setRemoveKeyboard(true);
         SendMessage sendMessage = SendMessage.builder().chatId(chatId)
-                .text(messageService.getMessage("ending.msg", userOrder.getLanguages(), Emojis.SUCCESS_MARK))
+                .text(getBotMessage("ending.msg", userOrder.getLanguages(), botMessageRepo))
                 .replyMarkup(replyKeyboardRemove).build();
         userOrder.getOrder().put("createdDate", new Date().toString());
         rabbitMQService.send(userOrder.getOrder());
@@ -210,9 +211,9 @@ public class FillingProfileHandler implements InputMessageHandler {
     private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, CurrentOrder userOrder) {
         JSONObject jsonObject = new JSONObject(question.getQuestion());
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
-                questionIdAndNextCache, question, buttonMessageCache, messageBoolCache, messageService, userOrder.getLanguages());
+                questionIdAndNextCache, question, buttonMessageCache, messageBoolCache, botMessageRepo, userOrder.getLanguages());
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(buttonMessageCache.get(userId).getQuestionType())
-                .message(jsonObject.getString(userOrder.getLanguages().name().toUpperCase())).build());
+                .message(jsonObject.getString(userOrder.getLanguages().toUpperCase())).build());
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
         orderCache.save(CurrentOrder.builder().userId(userId).languages(userOrder.getLanguages()).order(userOrder.getOrder()).build());
@@ -231,7 +232,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         messageBoolCache.delete(userId);
         offerCache.delete(userId);
         questionIdAndNextCache.delete(userId);
-        Languages languages = orderCache.get(userId).getLanguages();
+        String languages = orderCache.get(userId).getLanguages();
         orderCache.delete(userId);
         orderCache.save(CurrentOrder.builder().userId(userId).languages(languages).order(null).build());
     }
@@ -278,7 +279,7 @@ public class FillingProfileHandler implements InputMessageHandler {
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
 
         JSONObject jsonObject = new JSONObject(questionAction.getText());
-        JSONObject convertedQuestionAction = jsonObject.getJSONObject(userOrder.getLanguages().name().toUpperCase());
+        JSONObject convertedQuestionAction = jsonObject.getJSONObject(userOrder.getLanguages().toUpperCase());
         ObjectMapper objectMapper = new ObjectMapper();
         QAConverter qaConverter = objectMapper.readValue(convertedQuestionAction.toString(), QAConverter.class);
 

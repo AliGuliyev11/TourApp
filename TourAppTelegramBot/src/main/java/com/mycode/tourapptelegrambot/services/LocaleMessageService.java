@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.services;
 
-import com.mycode.tourapptelegrambot.enums.Languages;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +15,14 @@ public class LocaleMessageService {
     }
 
 
-    public String getMessage(String message, Languages languages) {
+    public String getMessage(String message, String languages) {
 
 
         if (languages == null) {
             locale = new Locale("az", "AZ");
-        } else if (languages.equals(Languages.AZ)) {
+        } else if (languages.equals("AZ")) {
             locale = new Locale("az", "AZ");
-        } else if (languages.equals(Languages.RU)) {
+        } else if (languages.equals("Ru")) {
             locale = new Locale("ru", "RU");
         } else {
             locale = new Locale("en", "EN");
@@ -32,14 +31,14 @@ public class LocaleMessageService {
         return messageSource.getMessage(message, null, locale);
     }
 
-    public String getMessage(String message, Languages languages, Object... args) {
+    public String getMessage(String message, String languages, Object... args) {
         if (languages == null) {
             locale = new Locale("az", "AZ");
-        } else if (languages.equals(Languages.AZ)) {
+        } else if (languages.equals("AZ")) {
             locale = new Locale("az", "AZ");
-        } else if (languages.equals(Languages.RU)) {
+        } else if (languages.equals("Ru")) {
             locale = new Locale("ru", "RU");
-        } else {
+        }  else {
             locale = new Locale("en", "EN");
         }
 

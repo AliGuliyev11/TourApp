@@ -7,6 +7,7 @@ import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OfferCache;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
 import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.services.OfferService;
@@ -32,16 +33,16 @@ public class OfferConsumer {
     private final OfferCache offerCache;
     private final OfferService offerService;
     private final OrderCache orderCache;
-    private final LocaleMessageService messageService;
+    private final BotMessageRepo botMessageRepo;
 
     public OfferConsumer(TourAppBot telegramBot, UserRepo userRepo, OfferCache offerCache, OfferService offerService,
-                         OrderCache orderCache, LocaleMessageService messageService) {
+                         OrderCache orderCache, BotMessageRepo botMessageRepo) {
         this.telegramBot = telegramBot;
         this.userRepo = userRepo;
         this.offerCache = offerCache;
         this.offerService = offerService;
         this.orderCache = orderCache;
-        this.messageService = messageService;
+        this.botMessageRepo=botMessageRepo;
     }
 
     @Value("${offer.count}")
@@ -59,12 +60,12 @@ public class OfferConsumer {
             if (count == maxOfferCount) {
                 offerService.save(offer, user, false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
-                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()), messageService)).build());
+                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()), botMessageRepo)).build());
             } else if (count < maxOfferCount) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
-                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(), orderCache.get(user.getId()), messageService));
+                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(), orderCache.get(user.getId()), botMessageRepo));
                 telegramBot.execute(sendPhoto);
                 offerService.save(offer, user, true);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());

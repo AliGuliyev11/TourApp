@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
+import com.mycode.tourapptelegrambot.models.Language;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -17,24 +18,17 @@ import java.util.List;
 public class AskLanguage {
 
 
-    public static InlineKeyboardMarkup getLanguageButtons() {
+    public static InlineKeyboardMarkup getLanguageButtons(List<Language> all) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
-        buttonAz.setText("AZ" + Emojis.Azerbaijan);
-        InlineKeyboardButton buttonRu = new InlineKeyboardButton();
-        buttonRu.setText("RU" + Emojis.Russian);
-        InlineKeyboardButton buttonEn = new InlineKeyboardButton();
-        buttonEn.setText("EN" + Emojis.English);
-
-        buttonAz.setCallbackData("LangButtonAz");
-        buttonRu.setCallbackData("LangButtonRu");
-        buttonEn.setCallbackData("LangButtonEn");
-
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(buttonAz);
-        keyboardButtonsRow1.add(buttonRu);
-        keyboardButtonsRow1.add(buttonEn);
+
+        for (var item:all){
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(item.getLang()+item.getEmoji());
+            button.setCallbackData("LangButton"+item.getLang());
+            keyboardButtonsRow1.add(button);
+        }
 
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         rowList.add(keyboardButtonsRow1);

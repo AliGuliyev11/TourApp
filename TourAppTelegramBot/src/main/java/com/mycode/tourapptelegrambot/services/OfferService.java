@@ -9,6 +9,7 @@ import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice.Rabbi
 import com.mycode.tourapptelegrambot.redis.RedisCache.OfferCache;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.UserOfferRepo;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
@@ -27,26 +28,27 @@ import java.util.stream.Collectors;
 
 import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.LoadMore.getLoadButtons;
+import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 
 @Service
 public class OfferService {
 
     private final UserOfferRepo userOfferRepo;
-    private final ModelMapper modelMapper = new ModelMapper();
     private final TourAppBot tourAppBot;
     private final OfferCache offerCache;
     private final OrderCache orderCache;
     private final RabbitMQService rabbitStopService;
-    private final LocaleMessageService messageService;
+    private final BotMessageRepo botMessageRepo;
 
     public OfferService(UserOfferRepo userOfferRepo, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
-                        RabbitMQService stopService, OrderCache orderCache, LocaleMessageService messageService) {
+                        RabbitMQService stopService, OrderCache orderCache, LocaleMessageService messageService,
+                        BotMessageRepo botMessageRepo) {
         this.userOfferRepo = userOfferRepo;
         this.tourAppBot = tourAppBot;
         this.offerCache = offerCache;
         this.rabbitStopService = stopService;
         this.orderCache = orderCache;
-        this.messageService = messageService;
+        this.botMessageRepo=botMessageRepo;
     }
 
     public void save(Offer offer, MyUser user, boolean isFive) {
@@ -68,7 +70,7 @@ public class OfferService {
 
         for (UserOffer item : offers) {
             tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), getAcceptButtons(item.getOfferId(),
-                    orderCache.get(userId), messageService));
+                    orderCache.get(userId), botMessageRepo));
             userOfferRepo.deleteById(item.getId());
         }
 
@@ -82,11 +84,11 @@ public class OfferService {
         List<BotApiMethod<?>> callbackAnswer=new ArrayList<>();
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
             callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F")
-                    .replyMarkup(getLoadButtons(orderCache.get(userId), messageService)).build());
+                    .replyMarkup(getLoadButtons(orderCache.get(userId), botMessageRepo)).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
             callbackAnswer.add(SendMessage.builder().chatId(chatId)
-                    .text(messageService.getMessage("no.more.load", orderCache.get(userId).getLanguages())).build());
+                    .text(getBotMessage("no.more.load", orderCache.get(userId).getLanguages(),botMessageRepo)).build());
         }
         return callbackAnswer;
     }

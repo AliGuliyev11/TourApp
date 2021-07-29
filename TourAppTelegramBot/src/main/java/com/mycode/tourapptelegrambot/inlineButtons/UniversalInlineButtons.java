@@ -2,7 +2,6 @@ package com.mycode.tourapptelegrambot.inlineButtons;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
-import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
 import com.mycode.tourapptelegrambot.redis.RedisCache.MessageBoolCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentButtonTypeAndMessage;
@@ -12,6 +11,7 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.redis.RedisCache.QuestionIdAndNextCache;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
@@ -40,17 +40,17 @@ public class UniversalInlineButtons {
     @SneakyThrows
     public SendMessage sendInlineKeyBoardMessage(Long userId, String chatId, int messageId, QuestionIdAndNextCache cache,
                                                  Question question, ButtonAndMessageCache buttonAndMessageCache,
-                                                 MessageBoolCache messageBoolCache, LocaleMessageService localeMessageService,
-                                                 Languages languages) {
+                                                 MessageBoolCache messageBoolCache, BotMessageRepo botMessageRepo,
+                                                 String languages) {
         JSONObject questionText = new JSONObject(question.getQuestion());
         QuestionAction questionAction = question.getQuestionActions();
 
 
         JSONObject jsonObject = new JSONObject(questionAction.getText());
-        JSONObject convertedQuestionAction = jsonObject.getJSONObject(languages.name().toUpperCase());
+        JSONObject convertedQuestionAction = jsonObject.getJSONObject(languages.toUpperCase());
         ObjectMapper objectMapper = new ObjectMapper();
         QAConverter qaConverter = objectMapper.readValue(convertedQuestionAction.toString(), QAConverter.class);
-        SendMessage sendMessage = SendMessage.builder().text(questionText.getString(languages.name().toUpperCase())).chatId(chatId).build();
+        SendMessage sendMessage = SendMessage.builder().text(questionText.getString(languages.toUpperCase())).chatId(chatId).build();
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
@@ -69,40 +69,20 @@ public class UniversalInlineButtons {
             } else if (item.getButtonType().equals(QuestionType.Button_Calendar.name())) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
-                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now(), localeMessageService, languages));
+                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now(), botMessageRepo, languages));
                 return sendMessage;
             } else if (item.getButtonType().equals(QuestionType.Button_Keyboard.name())) {
                 buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-                        .message(questionText.getString(languages.name().toUpperCase())).build());
+                        .message(questionText.getString(languages.toUpperCase())).build());
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
                 sendMessage.setReplyMarkup(addKeyboardButton(item.getText()));
                 return sendMessage;
             }
         }
 
-//        for (var item : question.getQuestionActions().stream().filter(a->a.getLanguages().equals(languages)).collect(Collectors.toList())) {
-//            questionType = item.getType();
-//            if (!item.getType().equals(QuestionType.Free_Text) && !item.getType().equals(QuestionType.Button_Calendar)
-//                    && !item.getType().equals(QuestionType.Button_Numeric) && !item.getType().equals(QuestionType.Button_Keyboard)) {
-//                rowList.add(addInlineKeyboardButton(item.getText(), item.getKeyword(), item.getId()));
-//                messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
-//            } else if (item.getType().equals(QuestionType.Button_Calendar)) {
-//                cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
-//                messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
-//                sendMessage.setReplyMarkup(new CalendarUtil().generateKeyboard(LocalDate.now(),localeMessageService,languages));
-//                return sendMessage;
-//            }else if (item.getType().equals(QuestionType.Button_Keyboard)){
-//                buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-//                        .message(questionText.getString(languages.name().toUpperCase())).build());
-//                cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
-//                sendMessage.setReplyMarkup(addKeyboardButton(item.getText()));
-//                return sendMessage;
-//            }
-//        }
-
         cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).prev(prev).build());
         buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-                .message(questionText.getString(languages.name().toUpperCase())).build());
+                .message(questionText.getString(languages.toUpperCase())).build());
 
 
         inlineKeyboardMarkup.setKeyboard(rowList);

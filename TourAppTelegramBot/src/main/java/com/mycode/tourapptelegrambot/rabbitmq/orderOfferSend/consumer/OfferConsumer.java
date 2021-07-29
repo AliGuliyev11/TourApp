@@ -2,6 +2,7 @@ package com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.consumer;
 
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.Offer;
+import com.mycode.tourapptelegrambot.dto.WarningDto;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OfferCache;
 import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
@@ -18,6 +19,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import java.util.UUID;
+
 import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.LoadMore.getLoadButtons;
 
@@ -32,13 +35,13 @@ public class OfferConsumer {
     private final LocaleMessageService messageService;
 
     public OfferConsumer(TourAppBot telegramBot, UserRepo userRepo, OfferCache offerCache, OfferService offerService,
-                         OrderCache orderCache,LocaleMessageService messageService) {
+                         OrderCache orderCache, LocaleMessageService messageService) {
         this.telegramBot = telegramBot;
         this.userRepo = userRepo;
         this.offerCache = offerCache;
         this.offerService = offerService;
-        this.orderCache=orderCache;
-        this.messageService=messageService;
+        this.orderCache = orderCache;
+        this.messageService = messageService;
     }
 
     @Value("${offer.count}")
@@ -54,24 +57,35 @@ public class OfferConsumer {
             System.out.println(count);
             count++;
             if (count == maxOfferCount) {
-                offerService.save(offer, user,false);
+                offerService.save(offer, user, false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
-                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()),messageService)).build());
+                        .replyMarkup(getLoadButtons(orderCache.get(user.getId()), messageService)).build());
             } else if (count < maxOfferCount) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
                 sendPhoto.setChatId(user.getChatId());
-                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(),orderCache.get(user.getId()), messageService));
+                sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(), orderCache.get(user.getId()), messageService));
                 telegramBot.execute(sendPhoto);
-                offerService.save(offer, user,true);
+                offerService.save(offer, user, true);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
             } else {
-                offerService.save(offer, user,false);
+                offerService.save(offer, user, false);
             }
             offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
 
         }
 
         System.out.println(offer);
+    }
+
+    @SneakyThrows
+    @RabbitListener(queues = "offerMadeQueue")
+    public void warningConsumer(WarningDto warningDto) {
+            MyUser user = userRepo.getMyUserByUuid(warningDto.getUserId());
+            if (user!=null){
+                user.setUuid(UUID.randomUUID().toString());
+                userRepo.save(user);
+                telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text(warningDto.getText()).build());
+            }
     }
 }

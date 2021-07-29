@@ -86,7 +86,7 @@ public class OfferService {
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
             callbackAnswer.add(SendMessage.builder().chatId(chatId)
-                    .text(messageService.getMessage("no.more.load", orderCache.get(userId).getLanguage())).build());
+                    .text(messageService.getMessage("no.more.load", orderCache.get(userId).getLanguages())).build());
         }
         return callbackAnswer;
     }

@@ -5,9 +5,12 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentOrder;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Repository
 public class OrderCache {
-    public static final String HASH_KEY = "TelegramBotOrderCache";
+    public static final String HASH_KEY = "TelegramMapCache";
     private RedisTemplate template;
 
     public OrderCache(RedisTemplate template) {
@@ -21,12 +24,12 @@ public class OrderCache {
         template.opsForHash().put(HASH_KEY,currentOrder.getUserId(),currentOrder);
     }
 
-    public Order get(Long userId){
+    public CurrentOrder get(Long userId){
         CurrentOrder currentOrder=(CurrentOrder) template.opsForHash().get(HASH_KEY,userId);
         if (currentOrder==null){
-            return new Order();
+            return new CurrentOrder();
         }
-        return currentOrder.getOrder();
+        return currentOrder;
     }
 
 

@@ -127,26 +127,28 @@ public class FillingProfileHandler implements InputMessageHandler {
         String chatId = String.valueOf(inputMsg.getChatId());
         int messageId = inputMsg.getMessageId();
         String regex = questionIdAndNextCache.get(userId).getRegex();
-        Order userOrder = orderCache.get(userId);
+        CurrentOrder userOrder = orderCache.get(userId);
         BotState botState = botStateCache.get(userId).getBotState();
 
         return getReplyForBotState(botState, userId, chatId, messageId, usersAnswer, regex, userOrder, inputMsg);
     }
 
-    /** This method for sending message with the help of current bot state
-     * @param botState cached bot state
-     * @param userId current user id
-     * @param chatId private chat id
-     * @param messageId current mesage id
+    /**
+     * This method for sending message with the help of current bot state
+     *
+     * @param botState    cached bot state
+     * @param userId      current user id
+     * @param chatId      private chat id
+     * @param messageId   current mesage id
      * @param usersAnswer user answer to bot question
-     * @param regex question validation regex
-     * @param userOrder current cached user order
-     * @param inputMsg current message
+     * @param regex       question validation regex
+     * @param userOrder   current cached user order
+     * @param inputMsg    current message
      * @return SendMessage
-     * */
+     */
 
     private SendMessage getReplyForBotState(BotState botState, Long userId, String chatId, int messageId, String usersAnswer,
-                                            String regex, Order userOrder, Message inputMsg) {
+                                            String regex, CurrentOrder userOrder, Message inputMsg) {
         SendMessage replyToUser = null;
         if (botState.equals(BotState.VALIDATION)) {
             botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
@@ -189,15 +191,15 @@ public class FillingProfileHandler implements InputMessageHandler {
      * @return SendMessage
      */
 
-    private SendMessage replyQuestionNull(Long userId, String chatId, Order userOrder) {
+    private SendMessage replyQuestionNull(Long userId, String chatId, CurrentOrder userOrder) {
         ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
         replyKeyboardRemove.setRemoveKeyboard(true);
         SendMessage sendMessage = SendMessage.builder().chatId(chatId)
-                .text(messageService.getMessage("ending.msg", userOrder.getLanguage(), Emojis.SUCCESS_MARK))
+                .text(messageService.getMessage("ending.msg", userOrder.getLanguages(), Emojis.SUCCESS_MARK))
                 .replyMarkup(replyKeyboardRemove).build();
-        userOrder.setCreatedDate(new Date());
-        orderRepo.save(userOrder);
-        rabbitMQService.send(userOrder);
+        userOrder.getOrder().put("createdDate", new Date().toString());
+//        orderRepo.save(userOrder);
+        rabbitMQService.send(userOrder.getOrder());
         deleteCache(userId);
         return sendMessage;
     }
@@ -212,14 +214,14 @@ public class FillingProfileHandler implements InputMessageHandler {
      * @param userOrder add current user order to cache
      * @return SendMessage
      */
-    private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, Order userOrder) {
+    private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, CurrentOrder userOrder) {
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
-                questionIdAndNextCache, question, buttonMessageCache, messageBoolCache,messageService,userOrder.getLanguage());
+                questionIdAndNextCache, question, buttonMessageCache, messageBoolCache, messageService, userOrder.getLanguages());
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(buttonMessageCache.get(userId).getQuestionType())
                 .message(question.getQuestion()).build());
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
-        orderCache.save(CurrentOrder.builder().userId(userId).order(userOrder).build());
+        orderCache.save(CurrentOrder.builder().userId(userId).languages(userOrder.getLanguages()).order(userOrder.getOrder()).build());
         return sendMessage;
     }
 
@@ -235,9 +237,9 @@ public class FillingProfileHandler implements InputMessageHandler {
         messageBoolCache.delete(userId);
         offerCache.delete(userId);
         questionIdAndNextCache.delete(userId);
-        Languages languages = orderCache.get(userId).getLanguage();
+        Languages languages = orderCache.get(userId).getLanguages();
         orderCache.delete(userId);
-        orderCache.save(CurrentOrder.builder().userId(userId).order(Order.builder().language(languages).build()).build());
+        orderCache.save(CurrentOrder.builder().userId(userId).languages(languages).order(null).build());
     }
 
 
@@ -278,27 +280,11 @@ public class FillingProfileHandler implements InputMessageHandler {
      */
 
     @SneakyThrows
-    private SendMessage mapToObject(Long userId, Order userOrder, String userAnswer) {
+    private SendMessage mapToObject(Long userId, CurrentOrder userOrder, String userAnswer) {
 
         QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
-        Class<?> order = userOrder.getClass();
-
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
-        Field field = order.getDeclaredField(questionAction.getKeyword());
-        field.setAccessible(true);
-        Class<?> type = field.getType();
-        if (isPrimitive(type)) {
-            Object boxed;
-            try {
-                boxed = boxPrimitiveClass(type, userAnswer);
-            } catch (Exception e) {
-                return new SendMessage(userOrder.getChatId(), buttonMessageCache.get(userId).getMessage());
-            }
-            field.set(userOrder, boxed);
-        } else {
-            field.set(userOrder, userAnswer);
-        }
-
+        userOrder.getOrder().put(questionAction.getKeyword(), userAnswer);
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionAction.getType())
                 .message(userAnswer).build());
 

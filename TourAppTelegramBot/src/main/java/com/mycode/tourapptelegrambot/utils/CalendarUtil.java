@@ -44,7 +44,7 @@ public class CalendarUtil {
         int daysInMonth = firstDay.dayOfMonth().getMaximumValue();
         int rows = ((daysInMonth + shift) % 7 > 0 ? 1 : 0) + (daysInMonth + shift) / 7;
         for (int i = 0; i < rows; i++) {
-            keyboard.add(buildRow(firstDay, shift));
+            keyboard.add(buildRow(firstDay, shift,date));
             firstDay = firstDay.plusDays(7 - shift);
             shift = 0;
         }
@@ -64,7 +64,7 @@ public class CalendarUtil {
         return InlineKeyboardButton.builder().callbackData(callBack).text(text).build();
     }
 
-    private List<InlineKeyboardButton> buildRow(LocalDate date, int shift) {
+    private List<InlineKeyboardButton> buildRow(LocalDate date, int shift, LocalDate localDate) {
         List<InlineKeyboardButton> row = new ArrayList<>();
         int day = date.getDayOfMonth();
         LocalDate callbackDate = date;
@@ -73,10 +73,11 @@ public class CalendarUtil {
         }
         for (int j = shift; j < 7; j++) {
             if (day <= (date.dayOfMonth().getMaximumValue())) {
-                if (date.isEqual(LocalDate.now()) && day == LocalDate.now().getDayOfMonth()) {
+
+                if (localDate.equals(LocalDate.now()) && day==LocalDate.now().getDayOfMonth()) {
                     row.add(createButton(callbackDate.toString(), "" + Emojis.Clock));
                     day++;
-                } else if (date.isBefore(LocalDate.now()) &&  day < LocalDate.now().getDayOfMonth()) {
+                } else if (date.isBefore(LocalDate.now()) && day < LocalDate.now().getDayOfMonth()) {
                     row.add(createButton(IGNORE, " "));
                     day++;
                 } else {

@@ -6,6 +6,8 @@ import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitmqconfig.Rabb
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service(value = "sendOrder")
 public class RabbitMQService {
     private final RabbitTemplate template;
@@ -14,7 +16,7 @@ public class RabbitMQService {
         this.template = template;
     }
 
-    public void send(Order order){
+    public void send(Map<String,String> order){
         template.convertAndSend(RabbitMQConfig.ORDER_EXCHANGE,RabbitMQConfig.ORDER_KEY,order);
     }
     public void stop(String uuid){

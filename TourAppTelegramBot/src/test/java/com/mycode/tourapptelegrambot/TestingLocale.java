@@ -290,77 +290,77 @@ public class TestingLocale {
                 Arrays.toString(messageService.getMessage("weekdays", order.getLanguage()).split("[,]")));
     }
 
-    @Test
-    void getAcceptButtonsAzTest() {
+//    @Test
+//    void getAcceptButtonsAzTest() {
+//
+//        Order order = Order.builder().language(Languages.AZ).build();
+//
+//
+//        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+//
+//        InlineKeyboardButton accept = new InlineKeyboardButton();
+//        accept.setText(messageService.getMessage("accept.offer", Languages.AZ));
+//
+//        accept.setCallbackData("Offer-123");
+//
+//        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+//        keyboardButtonsRow1.add(accept);
+//
+//        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+//        rowList.add(keyboardButtonsRow1);
+//
+//        inlineKeyboardMarkup.setKeyboard(rowList);
+//
+//        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
+//    }
+//
+//    @Test
+//    void getAcceptButtonsRuTest() {
+//
+//        Order order = Order.builder().language(Languages.RU).build();
+//
+//
+//        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+//
+//        InlineKeyboardButton accept = new InlineKeyboardButton();
+//        accept.setText(messageService.getMessage("accept.offer", Languages.RU));
+//
+//        accept.setCallbackData("Offer-123");
+//
+//        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+//        keyboardButtonsRow1.add(accept);
+//
+//        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+//        rowList.add(keyboardButtonsRow1);
+//
+//        inlineKeyboardMarkup.setKeyboard(rowList);
+//
+//        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
+//    }
 
-        Order order = Order.builder().language(Languages.AZ).build();
-
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-
-        InlineKeyboardButton accept = new InlineKeyboardButton();
-        accept.setText(messageService.getMessage("accept.offer", Languages.AZ));
-
-        accept.setCallbackData("Offer-123");
-
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(accept);
-
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(keyboardButtonsRow1);
-
-        inlineKeyboardMarkup.setKeyboard(rowList);
-
-        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
-    }
-
-    @Test
-    void getAcceptButtonsRuTest() {
-
-        Order order = Order.builder().language(Languages.RU).build();
-
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-
-        InlineKeyboardButton accept = new InlineKeyboardButton();
-        accept.setText(messageService.getMessage("accept.offer", Languages.RU));
-
-        accept.setCallbackData("Offer-123");
-
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(accept);
-
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(keyboardButtonsRow1);
-
-        inlineKeyboardMarkup.setKeyboard(rowList);
-
-        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
-    }
-
-    @Test
-    void getAcceptButtonsEnTest() {
-
-        Order order = Order.builder().language(Languages.EN).build();
-
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-
-        InlineKeyboardButton accept = new InlineKeyboardButton();
-        accept.setText(messageService.getMessage("accept.offer", Languages.EN));
-
-        accept.setCallbackData("Offer-123");
-
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(accept);
-
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(keyboardButtonsRow1);
-
-        inlineKeyboardMarkup.setKeyboard(rowList);
-
-        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
-    }
+//    @Test
+//    void getAcceptButtonsEnTest() {
+//
+//        Order order = Order.builder().language(Languages.EN).build();
+//
+//
+//        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+//
+//        InlineKeyboardButton accept = new InlineKeyboardButton();
+//        accept.setText(messageService.getMessage("accept.offer", Languages.EN));
+//
+//        accept.setCallbackData("Offer-123");
+//
+//        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+//        keyboardButtonsRow1.add(accept);
+//
+//        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+//        rowList.add(keyboardButtonsRow1);
+//
+//        inlineKeyboardMarkup.setKeyboard(rowList);
+//
+//        Assertions.assertEquals(inlineKeyboardMarkup, getAcceptButtons(123l, order, messageService));
+//    }
 
 
     @Test

@@ -19,7 +19,6 @@ import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.inlineButtons.UniversalInlineButtons;
 import com.mycode.tourapptelegrambot.repositories.*;
-import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.services.OfferService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
@@ -45,6 +44,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -115,7 +115,6 @@ public class TelegramFacade {
     @SneakyThrows
     public BotApiMethod<?> handleUpdate(Update update) {
         SendMessage replyMessage = null;
-
 
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -427,6 +426,9 @@ public class TelegramFacade {
         offerService.clearUserOffer(userId, uuid);
     }
 
+
+
+
     /**
      * This method for start case
      *
@@ -440,6 +442,8 @@ public class TelegramFacade {
     @SneakyThrows
     private SendMessage startCase(Long userId, String chatId) {
 
+        LinkedList<Language> checkedLanguages = languageChecker();
+        if (!checkedLanguages.isEmpty()) {
             String languages = orderCache.get(userId).getLanguages();
             telegramBot.execute(SendChatAction.builder().action("TYPING").chatId(chatId).build());
             telegramBot.sendPhoto(chatId, getBotMessage("startCase.firstMessage", "AZ", botMessageRepo),
@@ -451,13 +455,34 @@ public class TelegramFacade {
             map.put("chatId", chatId);
             orderCache.save(CurrentOrder.builder().userId(userId).languages(languages).order(map).build());
             SendMessage sendMessage = SendMessage.builder().chatId(chatId).text(getBotMessage("startCase.askLang", "AZ", botMessageRepo))
-                    .replyMarkup(getLanguageButtons(languageRepo.findAll())).parseMode("HTML").build();
+                    .replyMarkup(getLanguageButtons(checkedLanguages)).parseMode("HTML").build();
             userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
             return sendMessage;
+        }
+        telegramBot.sendPhoto(chatId, "SORRY", "src/main/resources/static/images/nodata.png");
+        return SendMessage.builder().chatId(chatId).text("").build();
+    }
+
+
+
+
+    public LinkedList<Language> languageChecker() {
+
+        LinkedList<Language> checkedLanguages = new LinkedList<>();
+
+        List<Language> languages = languageRepo.findAll();
+        int question = questionRepo.findAll().size();
+        int botMessage = botMessageRepo.findAll().size();
+        for (var item : languages) {
+            if (item.getQuestions().size() == question && item.getBotMessages().size() == botMessage) {
+                checkedLanguages.add(item);
+            }
+        }
+        return checkedLanguages;
     }
 
     /**
-     * This method fir handle callback query
+     * This method for handle callback query
      *
      * @param buttonQuery this is callback query
      * @return List of BotApiMethod<?>

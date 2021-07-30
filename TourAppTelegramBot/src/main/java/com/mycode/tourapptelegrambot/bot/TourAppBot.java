@@ -18,13 +18,18 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
+import java.io.*;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Telegram bot class where Webhook extends and setted
+/**
+ * Telegram bot class where Webhook extends and setted
+ *
  * @author Ali Guliyev
- * @version 1.0 */
+ * @version 1.0
+ */
 
 public class TourAppBot extends TelegramWebhookBot {
 
@@ -43,7 +48,9 @@ public class TourAppBot extends TelegramWebhookBot {
         return botToken;
     }
 
-    /** Every requests enters this method */
+    /**
+     * Every requests enters this method
+     */
 
     @SneakyThrows
     @Override
@@ -62,9 +69,12 @@ public class TourAppBot extends TelegramWebhookBot {
     @Value("${voice.path}")
     String path;
 
-    /** Speech to text
+    /**
+     * Speech to text
+     *
+     * @param voice user voice
      * @apiNote this method for download user voice file
-     * @param voice user voice*/
+     */
 
     @SneakyThrows
     public void voice(Voice voice) {
@@ -97,25 +107,63 @@ public class TourAppBot extends TelegramWebhookBot {
         this.webhookPath = webhookPath;
     }
 
-    /** Method for sending photo
-     * @param chatId current private chat id
+    @Value("${start.case.file}")
+    String fileDestination;
+
+    /**
+     * Method for sending photo
+     *
+     * @param chatId       current private chat id
      * @param imageCaption caption of image
-     * @param imagePath image path*/
+     * @param imagePath    image path
+     */
 
     @SneakyThrows
     public void sendPhoto(String chatId, String imageCaption, String imagePath) {
-        File image = ResourceUtils.getFile(imagePath);
+        File image;
+        try {
+            image = ResourceUtils.getFile(imagePath);
+        } catch (IOException e) {
+                saveImage(imagePath, fileDestination);
+                image = ResourceUtils.getFile(fileDestination);
+        }
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setPhoto(inputFile);
         sendPhoto.setChatId(chatId);
         sendPhoto.setCaption(imageCaption);
-        execute(sendPhoto);
+        try {
+            execute(sendPhoto);
+        }catch (Exception e){
+            sendPhoto.setPhoto(new InputFile().setMedia(ResourceUtils.getFile(fileDestination)));
+            execute(sendPhoto);
+        }
+
+    }
+
+    public static void saveImage(String imageUrl, String destinationFile) throws IOException {
+        try {
+            URL url = new URL(imageUrl);
+            InputStream is = url.openStream();
+            OutputStream os = new FileOutputStream(destinationFile);
+            byte[] b = new byte[2048];
+            int length;
+            while ((length = is.read(b)) != -1) {
+                os.write(b, 0, length);
+            }
+            is.close();
+            os.close();
+        }catch (Exception e){
+
+        }
+
     }
 
 
-    /** Setting bot commands */
+    /**
+     * Setting bot commands
+     */
 
     @SneakyThrows
     @PostConstruct
@@ -127,9 +175,11 @@ public class TourAppBot extends TelegramWebhookBot {
         execute(SetMyCommands.builder().commands(botCommands).build());
     }
 
-    /** Sending offer to user
-     * @param chatId current private chat id
-     * @param image agent's offer travel package image
+    /**
+     * Sending offer to user
+     *
+     * @param chatId        current private chat id
+     * @param image         agent's offer travel package image
      * @param acceptButtons inline keyboard for accept travel package
      */
 

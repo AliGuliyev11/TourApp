@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Set;
 
 @Entity(name = "language")
 @Getter
@@ -19,6 +20,8 @@ public class Language {
     @Column(length = 3)
     String lang;
     String emoji;
-    @ManyToMany(targetEntity = Question.class)
-    List<Question> questions;
+    @ManyToMany(targetEntity = Question.class,fetch = FetchType.LAZY)
+    Set<Question> questions;
+    @ManyToMany(targetEntity = BotMessage.class,fetch = FetchType.LAZY)
+    Set<BotMessage> botMessages;
 }

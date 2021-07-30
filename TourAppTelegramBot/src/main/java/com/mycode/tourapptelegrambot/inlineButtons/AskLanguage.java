@@ -6,7 +6,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class for just /start case
@@ -18,12 +20,12 @@ import java.util.List;
 public class AskLanguage {
 
 
-    public static InlineKeyboardMarkup getLanguageButtons(List<Language> all) {
+    public static InlineKeyboardMarkup getLanguageButtons(LinkedList<Language> languages) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
 
-        for (var item:all){
+        for (var item:languages){
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText(item.getLang()+item.getEmoji());
             button.setCallbackData("LangButton"+item.getLang());

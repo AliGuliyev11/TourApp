@@ -22,6 +22,8 @@ public class QuestionAction {
     Question question;
     @Enumerated(EnumType.STRING)
     QuestionType type;
+    @Enumerated(EnumType.STRING)
+    Languages languages;
     String keyword;
     String text;
     Long next;

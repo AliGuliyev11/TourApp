@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface QuestionRepo extends JpaRepository<Question,Long> {
 
-    @Query(value = "SELECT * from question q WHERE q.is_first=true and q.languages=:languages",nativeQuery = true)
-    Question getFirstQuestionByLanguage(String languages);
+    @Query(value = "SELECT * from question q WHERE q.is_first=true",nativeQuery = true)
+    Question getFirstQuestion();
 
 
 }

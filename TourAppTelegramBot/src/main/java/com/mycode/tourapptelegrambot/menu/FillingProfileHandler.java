@@ -24,6 +24,7 @@ import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -215,10 +216,11 @@ public class FillingProfileHandler implements InputMessageHandler {
      * @return SendMessage
      */
     private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, CurrentOrder userOrder) {
+        JSONObject jsonObject=new JSONObject(question.getQuestion());
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
                 questionIdAndNextCache, question, buttonMessageCache, messageBoolCache, messageService, userOrder.getLanguages());
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(buttonMessageCache.get(userId).getQuestionType())
-                .message(question.getQuestion()).build());
+                .message(jsonObject.getString(userOrder.getLanguages().name().toUpperCase())).build());
         botStateCache.save(CurrentBotState.builder().userId(userId).botState(BotState.FILLING_TOUR).build());
         questionIdAndNextCache.save(getQuestionIdAndNextFromQuestion(question, userId));
         orderCache.save(CurrentOrder.builder().userId(userId).languages(userOrder.getLanguages()).order(userOrder.getOrder()).build());

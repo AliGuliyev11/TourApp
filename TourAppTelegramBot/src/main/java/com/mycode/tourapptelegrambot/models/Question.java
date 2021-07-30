@@ -20,8 +20,6 @@ public class Question {
     String question;
     boolean isFirst;
     String regex;
-    @Enumerated(EnumType.STRING)
-    Languages languages;
     @OneToMany(targetEntity = QuestionAction.class, mappedBy = "question")
     List<QuestionAction> questionActions;
 }

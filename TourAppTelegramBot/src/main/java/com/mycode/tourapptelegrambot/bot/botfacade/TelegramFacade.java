@@ -1,6 +1,7 @@
 package com.mycode.tourapptelegrambot.bot.botfacade;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.cloud.sdk.core.security.Authenticator;
 import com.ibm.cloud.sdk.core.security.IamAuthenticator;
 import com.ibm.watson.speech_to_text.v1.SpeechToText;
@@ -9,6 +10,7 @@ import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.BotStateSendMessage;
+import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.*;
@@ -32,6 +34,8 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -117,6 +121,9 @@ public class TelegramFacade {
     @SneakyThrows
     public BotApiMethod<?> handleUpdate(Update update) {
         SendMessage replyMessage = null;
+
+
+
 
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -615,7 +622,7 @@ public class TelegramFacade {
         callBackAnswer.add(getLanguageType(buttonQuery, userOrder));
         callBackAnswer.add(new SendMessage(String.valueOf(chatId), userOrder.getLanguages().name()));
         callBackAnswer.add(new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
-                questionRepo.getFirstQuestionByLanguage(userOrder.getLanguages().name()), buttonTypeAndMessage, messageBoolCache
+                questionRepo.getFirstQuestion(), buttonTypeAndMessage, messageBoolCache
                 , messageService, userOrder.getLanguages()));
 
         callBackAnswer.add(EditMessageReplyMarkup.builder().chatId(String.valueOf(chatId)).messageId(messageId).replyMarkup(null).build());
@@ -725,18 +732,21 @@ public class TelegramFacade {
         final Long userId = buttonQuery.getFrom().getId();
         List<QuestionAction> questionActions = questionActionRepo.findQuestionActionsByNext(questionIdAndNext.getNext());
         for (var item : questionActions) {
-            if (item.getType().equals(QuestionType.Button)) {
-                QuestionAction questionAction = questionActionRepo.findById(item.getId()).get();
-                setButtonTypeDataToOrder(questionAction, userOrder, userId, item.getType());
+
+            if (buttonQuery.getData().equals(item.getKeyword() + item.getId())) {
+
+                if (item.getType().equals(QuestionType.Button)) {
+                    QuestionAction questionAction = questionActionRepo.findById(item.getId()).get();
+                    setButtonTypeDataToOrder(questionAction, userOrder, userId, item.getType());
+                } else {
+                    buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(item.getType())
+                            .message(buttonQuery.getMessage().getText()).build());
+                }
                 messageBoolCache.save(MessageAndBoolean.builder().userId(buttonQuery.getFrom().getId()).send(true).build());
+
                 break;
             } else if (item.getType().equals(QuestionType.Button_Calendar)) {
                 return setCalendarField(buttonQuery, item.getKeyword(), userId, item.getType(), userOrder);
-            } else {
-                buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(item.getType())
-                        .message(buttonQuery.getMessage().getText()).build());
-                messageBoolCache.save(MessageAndBoolean.builder().userId(buttonQuery.getFrom().getId()).send(true).build());
-                break;
             }
         }
         return null;

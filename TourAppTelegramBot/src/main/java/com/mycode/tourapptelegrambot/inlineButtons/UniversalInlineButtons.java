@@ -13,6 +13,7 @@ import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import org.joda.time.LocalDate;
+import org.json.JSONObject;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -22,6 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class for creating inline keyboard buttons dynamically
@@ -35,7 +37,9 @@ public class UniversalInlineButtons {
                                                  Question question, ButtonAndMessageCache buttonAndMessageCache,
                                                  MessageBoolCache messageBoolCache, LocaleMessageService localeMessageService,
                                                  Languages languages) {
-        SendMessage sendMessage = SendMessage.builder().text(question.getQuestion()).chatId(chatId).build();
+        JSONObject questionText=new JSONObject(question.getQuestion());
+
+        SendMessage sendMessage = SendMessage.builder().text(questionText.getString(languages.name().toUpperCase())).chatId(chatId).build();
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
@@ -44,7 +48,7 @@ public class UniversalInlineButtons {
         Long prev = null;
         Long questionId = null;
         QuestionType questionType = null;
-        for (var item : question.getQuestionActions()) {
+        for (var item : question.getQuestionActions().stream().filter(a->a.getLanguages().equals(languages)).collect(Collectors.toList())) {
             prev = item.getQuestion().getId();
             next = item.getNext();
             questionId = item.getId();
@@ -60,16 +64,16 @@ public class UniversalInlineButtons {
                 return sendMessage;
             }else if (item.getType().equals(QuestionType.Button_Keyboard)){
                 buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-                        .message(question.getQuestion()).build());
+                        .message(questionText.getString(languages.name().toUpperCase())).build());
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
-                sendMessage.setReplyMarkup(addKeyboardButton(item.getText(),question.getLanguages()));
+                sendMessage.setReplyMarkup(addKeyboardButton(item.getText()));
                 return sendMessage;
             }
         }
 
         cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).next(next).regex(question.getRegex()).prev(prev).build());
         buttonAndMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-                .message(question.getQuestion()).build());
+                .message(questionText.getString(languages.name().toUpperCase())).build());
 
 
         inlineKeyboardMarkup.setKeyboard(rowList);
@@ -79,7 +83,7 @@ public class UniversalInlineButtons {
     }
 
 
-    private ReplyKeyboardMarkup addKeyboardButton(String text, Languages languages){
+    private ReplyKeyboardMarkup addKeyboardButton(String text){
         final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);

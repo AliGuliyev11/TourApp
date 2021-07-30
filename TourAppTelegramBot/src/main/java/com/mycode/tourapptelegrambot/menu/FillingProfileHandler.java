@@ -1,7 +1,9 @@
 package com.mycode.tourapptelegrambot.menu;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycode.tourapptelegrambot.bot.botfacade.InputMessageHandler;
+import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
 import com.mycode.tourapptelegrambot.enums.Languages;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice.RabbitMQService;
@@ -216,7 +218,7 @@ public class FillingProfileHandler implements InputMessageHandler {
      * @return SendMessage
      */
     private SendMessage replyQuestionNotNull(Long userId, String chatId, int messageId, Question question, CurrentOrder userOrder) {
-        JSONObject jsonObject=new JSONObject(question.getQuestion());
+        JSONObject jsonObject = new JSONObject(question.getQuestion());
         SendMessage sendMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId,
                 questionIdAndNextCache, question, buttonMessageCache, messageBoolCache, messageService, userOrder.getLanguages());
         buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(buttonMessageCache.get(userId).getQuestionType())
@@ -259,11 +261,10 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     private QuestionIdAndNext getQuestionIdAndNextFromQuestion(Question question, Long userId) {
         QuestionIdAndNext questionIdAndNext = new QuestionIdAndNext();
-        for (var item : question.getQuestionActions()) {
-            questionIdAndNext.setPrev(item.getQuestion().getId());
-            questionIdAndNext.setNext(item.getNext());
-            questionIdAndNext.setQuestionId(item.getId());
-        }
+        QuestionAction questionAction = question.getQuestionActions();
+        questionIdAndNext.setPrev(questionAction.getQuestion().getId());
+        questionIdAndNext.setNext(questionAction.getNext());
+        questionIdAndNext.setQuestionId(questionAction.getId());
         questionIdAndNext.setRegex(question.getRegex());
         questionIdAndNext.setUserId(userId);
         return questionIdAndNext;
@@ -283,11 +284,17 @@ public class FillingProfileHandler implements InputMessageHandler {
 
     @SneakyThrows
     private SendMessage mapToObject(Long userId, CurrentOrder userOrder, String userAnswer) {
-
         QuestionIdAndNext questionIdAndNext = questionIdAndNextCache.get(userId);
         QuestionAction questionAction = questionActionRepo.findById(questionIdAndNext.getQuestionId()).get();
+
+        JSONObject jsonObject = new JSONObject(questionAction.getText());
+        JSONObject convertedQuestionAction = jsonObject.getJSONObject(userOrder.getLanguages().name().toUpperCase());
+        ObjectMapper objectMapper = new ObjectMapper();
+        QAConverter qaConverter = objectMapper.readValue(convertedQuestionAction.toString(), QAConverter.class);
+
         userOrder.getOrder().put(questionAction.getKeyword(), userAnswer);
-        buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionAction.getType())
+        buttonMessageCache.save(CurrentButtonTypeAndMessage.builder().userId(userId)
+                .questionType(QuestionType.valueOf(qaConverter.questionAction.get(0).buttonType))
                 .message(userAnswer).build());
 
         return null;

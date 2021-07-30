@@ -11,6 +11,7 @@ import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.BotStateSendMessage;
 import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
+import com.mycode.tourapptelegrambot.dto.QuestionAction.QuestionActionDto;
 import com.mycode.tourapptelegrambot.models.MyUser;
 import com.mycode.tourapptelegrambot.redis.RedisCache.*;
 import com.mycode.tourapptelegrambot.redis.redisEntity.*;
@@ -121,8 +122,6 @@ public class TelegramFacade {
     @SneakyThrows
     public BotApiMethod<?> handleUpdate(Update update) {
         SendMessage replyMessage = null;
-
-
 
 
         if (update.hasCallbackQuery()) {
@@ -730,23 +729,27 @@ public class TelegramFacade {
     @SneakyThrows
     private BotApiMethod<?> findCallback(CallbackQuery buttonQuery, CurrentOrder userOrder, QuestionIdAndNext questionIdAndNext) {
         final Long userId = buttonQuery.getFrom().getId();
-        List<QuestionAction> questionActions = questionActionRepo.findQuestionActionsByNext(questionIdAndNext.getNext());
-        for (var item : questionActions) {
+        QuestionAction questionAction = questionActionRepo.findQuestionActionByNext(questionIdAndNext.getNext());
+        JSONObject jsonObject = new JSONObject(questionAction.getText());
+        JSONObject convertedQuestionAction = jsonObject.getJSONObject(userOrder.getLanguages().name().toUpperCase());
+        ObjectMapper objectMapper = new ObjectMapper();
+        QAConverter qaConverter = objectMapper.readValue(convertedQuestionAction.toString(), QAConverter.class);
+        for (var item : qaConverter.questionAction) {
 
-            if (buttonQuery.getData().equals(item.getKeyword() + item.getId())) {
+            if (buttonQuery.getData().equals(questionAction.getKeyword() +item.callbackData)) {
 
-                if (item.getType().equals(QuestionType.Button)) {
-                    QuestionAction questionAction = questionActionRepo.findById(item.getId()).get();
-                    setButtonTypeDataToOrder(questionAction, userOrder, userId, item.getType());
+                if (item.getButtonType().equals(QuestionType.Button.name())) {
+                    setButtonTypeDataToOrder(item, questionAction.getKeyword(), userOrder, userId);
                 } else {
-                    buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(item.getType())
+                    buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId)
+                            .questionType(QuestionType.valueOf(item.getButtonType()))
                             .message(buttonQuery.getMessage().getText()).build());
                 }
                 messageBoolCache.save(MessageAndBoolean.builder().userId(buttonQuery.getFrom().getId()).send(true).build());
 
                 break;
-            } else if (item.getType().equals(QuestionType.Button_Calendar)) {
-                return setCalendarField(buttonQuery, item.getKeyword(), userId, item.getType(), userOrder);
+            } else if (item.getButtonType().equals(QuestionType.Button_Calendar.name())) {
+                return setCalendarField(buttonQuery, questionAction.getKeyword(), userId,QuestionType.valueOf(item.getButtonType()), userOrder);
             }
         }
         return null;
@@ -782,19 +785,17 @@ public class TelegramFacade {
     /**
      * Mapping button data to order
      *
-     * @param questionAction current question action
-     * @param userOrder      current user order
-     * @param userId         current user id
-     * @param questionType   current question type @see QuestionType enum
+     * @param item
+     * @param keyword
+     * @param userOrder current user order
+     * @param userId    current user id
      */
 
     @SneakyThrows
-    private void setButtonTypeDataToOrder(QuestionAction questionAction,
-                                          CurrentOrder userOrder, Long userId, QuestionType questionType) {
-        Object text = questionAction.getText();
-        userOrder.getOrder().put(questionAction.getKeyword(), text.toString());
-        buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(questionType)
-                .message(text.toString()).build());
+    private void setButtonTypeDataToOrder(QuestionActionDto item, String keyword, CurrentOrder userOrder, Long userId) {
+        userOrder.getOrder().put(keyword, item.text);
+        buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.valueOf(item.getButtonType()))
+                .message(item.text).build());
     }
 
 

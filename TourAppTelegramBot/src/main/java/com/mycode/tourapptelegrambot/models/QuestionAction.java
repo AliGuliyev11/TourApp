@@ -18,13 +18,10 @@ public class QuestionAction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @ManyToOne(targetEntity = Question.class)
+    @OneToOne(targetEntity = Question.class)
     Question question;
-    @Enumerated(EnumType.STRING)
-    QuestionType type;
-    @Enumerated(EnumType.STRING)
-    Languages languages;
     String keyword;
+    @Column(length = 2500)
     String text;
     Long next;
 }

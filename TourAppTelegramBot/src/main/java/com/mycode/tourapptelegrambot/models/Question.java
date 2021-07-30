@@ -17,9 +17,10 @@ public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+    @Column(length = 2500)
     String question;
     boolean isFirst;
     String regex;
-    @OneToMany(targetEntity = QuestionAction.class, mappedBy = "question")
-    List<QuestionAction> questionActions;
+    @OneToOne(targetEntity = QuestionAction.class)
+    QuestionAction questionActions;
 }

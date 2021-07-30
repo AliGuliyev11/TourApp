@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface QuestionActionRepo extends JpaRepository<QuestionAction,Long> {
 
-    List<QuestionAction> findQuestionActionsByNext(Long next);
+    QuestionAction findQuestionActionByNext(Long next);
 
 }

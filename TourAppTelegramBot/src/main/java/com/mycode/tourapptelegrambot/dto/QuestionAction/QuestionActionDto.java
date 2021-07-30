@@ -14,5 +14,7 @@ public class QuestionActionDto {
     public String text;
     @JsonProperty("ButtonType")
     public String buttonType;
+    @JsonProperty("CallbackData")
+    public String callbackData;
 }
 

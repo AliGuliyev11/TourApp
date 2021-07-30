@@ -1,12 +1,8 @@
 package com.mycode.tourapptelegrambot.redis.RedisCache;
 
-import com.mycode.tourapptelegrambot.models.Order;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentOrder;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Repository
 public class OrderCache {

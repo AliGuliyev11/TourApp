@@ -15,10 +15,8 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.QuestionIdAndNext;
 import com.mycode.tourapptelegrambot.enums.BotState;
 import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.inlineButtons.UniversalInlineButtons;
-import com.mycode.tourapptelegrambot.models.Order;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
-import com.mycode.tourapptelegrambot.repositories.OrderRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionActionRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
@@ -32,13 +30,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 
-import java.lang.reflect.Field;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
-
-import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
-import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 
 /**
  * This class for when bot ask question without inline keyboard button
@@ -59,20 +52,18 @@ public class FillingProfileHandler implements InputMessageHandler {
     private final OfferCache offerCache;
     private final QuestionActionRepo questionActionRepo;
     private final QuestionRepo questionRepo;
-    private final OrderRepo orderRepo;
     private final RabbitMQService rabbitMQService;
     private final UserRepo userRepo;
     private final LocaleMessageService messageService;
 
 
     public FillingProfileHandler(QuestionActionRepo questionActionRepo,
-                                 QuestionRepo questionRepo, OrderRepo orderRepo, QuestionIdAndNextCache questionIdAndNextCache,
+                                 QuestionRepo questionRepo, QuestionIdAndNextCache questionIdAndNextCache,
                                  ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
                                  OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo,
                                  LocaleMessageService messageService) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
-        this.orderRepo = orderRepo;
         this.questionIdAndNextCache = questionIdAndNextCache;
         this.buttonMessageCache = buttonMessageCache;
         this.messageBoolCache = messageBoolCache;
@@ -201,7 +192,6 @@ public class FillingProfileHandler implements InputMessageHandler {
                 .text(messageService.getMessage("ending.msg", userOrder.getLanguages(), Emojis.SUCCESS_MARK))
                 .replyMarkup(replyKeyboardRemove).build();
         userOrder.getOrder().put("createdDate", new Date().toString());
-//        orderRepo.save(userOrder);
         rabbitMQService.send(userOrder.getOrder());
         deleteCache(userId);
         return sendMessage;

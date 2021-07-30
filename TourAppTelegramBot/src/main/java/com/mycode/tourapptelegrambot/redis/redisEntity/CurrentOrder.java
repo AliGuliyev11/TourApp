@@ -1,7 +1,6 @@
 package com.mycode.tourapptelegrambot.redis.redisEntity;
 
 import com.mycode.tourapptelegrambot.enums.Languages;
-import com.mycode.tourapptelegrambot.models.Order;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;

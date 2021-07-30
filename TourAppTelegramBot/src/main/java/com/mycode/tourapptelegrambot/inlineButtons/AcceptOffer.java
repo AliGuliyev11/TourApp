@@ -1,6 +1,5 @@
 package com.mycode.tourapptelegrambot.inlineButtons;
 
-import com.mycode.tourapptelegrambot.models.Order;
 import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentOrder;
 import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;

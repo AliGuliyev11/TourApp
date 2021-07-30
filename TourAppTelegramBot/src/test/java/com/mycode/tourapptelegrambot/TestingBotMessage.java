@@ -1,71 +1,75 @@
-//package com.mycode.tourapptelegrambot;
-//
-//import com.mycode.tourapptelegrambot.enums.Languages;
-//import com.mycode.tourapptelegrambot.services.LocaleMessageService;
-//import com.mycode.tourapptelegrambot.utils.CalendarUtil;
-//import com.mycode.tourapptelegrambot.utils.Emojis;
-//import org.joda.time.LocalDate;
-//import org.junit.jupiter.api.Assertions;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-//import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-//
-//import java.text.SimpleDateFormat;
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.List;
-//
-//import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
-//
-//@SpringBootTest
-//public class TestingLocale {
-//
-//    @Autowired
-//    LocaleMessageService messageService;
-//
-//    @Test
-//    void sendEndingMessageAz() {
-//        Order order = Order.builder().language(Languages.AZ).build();
-//        Assertions.assertEquals("Əla,qısa zamanda sizə təkliflər göndərəcəyik." + Emojis.SUCCESS_MARK,
-//                messageService.getMessage("ending.msg", order.getLanguage(), Emojis.SUCCESS_MARK));
-//    }
-//
-//    @Test
-//    void sendEndingMessageRu() {
-//        Order order = Order.builder().language(Languages.RU).build();
-//        Assertions.assertEquals("Отлично, мы пришлем вам предложения в кратчайшие сроки." + Emojis.SUCCESS_MARK,
-//                messageService.getMessage("ending.msg", order.getLanguage(), Emojis.SUCCESS_MARK));
-//    }
-//
-//    @Test
-//    void sendEndingMessageEn() {
-//        Order order = Order.builder().language(Languages.EN).build();
-//        Assertions.assertEquals("Excellent, we will send you suggestions as soon as possible." + Emojis.SUCCESS_MARK,
-//                messageService.getMessage("ending.msg", order.getLanguage(), Emojis.SUCCESS_MARK));
-//    }
-//
-//    @Test
-//    void sendIgnoreMessageAz() {
-//        Order order = Order.builder().language(Languages.AZ).build();
-//        Assertions.assertEquals("Yalnız tarixləri seçə bilərsiz" + Emojis.Times,
-//                messageService.getMessage("ignore.message", order.getLanguage(), Emojis.Times));
-//    }
-//
-//    @Test
-//    void sendIgnoreMessageEn() {
-//        Order order = Order.builder().language(Languages.EN).build();
-//        Assertions.assertEquals("You can only select dates" + Emojis.Times,
-//                messageService.getMessage("ignore.message", order.getLanguage(), Emojis.Times));
-//    }
-//
-//    @Test
-//    void sendIgnoreMessageRu() {
-//        Order order = Order.builder().language(Languages.RU).build();
-//        Assertions.assertEquals("Вы можете выбрать только даты" + Emojis.Times,
-//                messageService.getMessage("ignore.message", order.getLanguage(), Emojis.Times));
-//    }
+package com.mycode.tourapptelegrambot;
+
+import com.google.gson.Gson;
+import com.mycode.tourapptelegrambot.enums.Languages;
+import com.mycode.tourapptelegrambot.models.BotMessage;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
+import com.mycode.tourapptelegrambot.services.LocaleMessageService;
+import com.mycode.tourapptelegrambot.utils.CalendarUtil;
+import com.mycode.tourapptelegrambot.utils.Emojis;
+import org.joda.time.LocalDate;
+import org.junit.jupiter.api.*;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
+import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@AutoConfigureMockMvc
+@SpringBootTest
+public class TestingBotMessage {
+
+    @Autowired
+    BotMessageRepo botMessageRepo;
+
+
+
+    @Test
+    void sendEndingMessage() {
+        BotMessage botMessage=new BotMessage();
+        Map<String,String> message=new HashMap<>();
+        message.put("AZ","Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅");
+        message.put("EN","Excellent, we will send you suggestions as soon as possible.✅");
+        message.put("RU","Отлично, мы пришлем вам предложения в кратчайшие сроки.✅");
+        Gson gson=new Gson();
+        String endingMessage=gson.toJson(message);
+        botMessage.setMessage(endingMessage);
+        botMessage.setKeyword("ending.msg");
+        botMessageRepo.save(botMessage);
+        String language="AZ";
+        String keyword="ending.msg";
+        String expected="Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅";
+        Assertions.assertEquals(expected,getBotMessage(keyword,language,botMessageRepo));
+    }
+
+
+    @Test
+    void sendIgnoreMessage() {
+        Gson gson=new Gson();
+        BotMessage botMessageIgnore=new BotMessage();
+        Map<String,String> messageIgnore=new HashMap<>();
+        messageIgnore.put("AZ","Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅");
+        messageIgnore.put("EN","You can only select dates ❌");
+        messageIgnore.put("RU","Вы можете выбрать только даты ❌");
+        String ignore=gson.toJson(messageIgnore);
+        botMessageIgnore.setMessage(ignore);
+        botMessageIgnore.setKeyword("ignore.message");
+        botMessageRepo.save(botMessageIgnore);
+        String language="EN";
+        String keyword="ignore.message";
+        String expected="You can only select dates ❌";
+        Assertions.assertEquals(expected,getBotMessage(keyword,language,botMessageRepo));
+    }
+
 //
 //    @Test
 //    void getPrevCalendarMessageAz() {
@@ -525,4 +529,4 @@
 //
 //        Assertions.assertEquals(inlineKeyboardMarkup, new CalendarUtil().generateKeyboard(LocalDate.now(), messageService, Languages.RU));
 //    }
-//}
+}

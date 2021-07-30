@@ -7,7 +7,12 @@ import org.json.JSONObject;
 public class Messages {
     public  static String getBotMessage(String keyword, String language, BotMessageRepo botMessageRepo) {
         BotMessage botMessage = botMessageRepo.getBotMessageByKeyword(keyword);
-        JSONObject message = new JSONObject(botMessage.getMessage());
-        return message.getString(language);
+        if (botMessage==null){
+            return "\uD83D\uDE04";
+        }else{
+            JSONObject message = new JSONObject(botMessage.getMessage());
+            return message.getString(language);
+        }
+
     }
 }

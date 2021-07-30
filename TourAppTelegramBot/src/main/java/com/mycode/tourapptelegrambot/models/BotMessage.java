@@ -5,10 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity(name = "bot_message")
 @Getter
@@ -19,5 +16,6 @@ public class BotMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String keyword;
+    @Column(length = 2500)
     String message;
 }

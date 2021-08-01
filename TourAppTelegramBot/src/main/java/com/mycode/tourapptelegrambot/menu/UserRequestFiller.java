@@ -24,6 +24,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.commands.DeleteMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
@@ -42,7 +43,7 @@ import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 
 @Slf4j
 @Component
-public class FillingProfileHandler implements InputMessageHandler {
+public class UserRequestFiller implements InputMessageHandler {
 
     private final QuestionIdAndNextCache questionIdAndNextCache;
     private final ButtonAndMessageCache buttonMessageCache;
@@ -57,11 +58,11 @@ public class FillingProfileHandler implements InputMessageHandler {
     private final BotMessageRepo botMessageRepo;
 
 
-    public FillingProfileHandler(QuestionActionRepo questionActionRepo,
-                                 QuestionRepo questionRepo, QuestionIdAndNextCache questionIdAndNextCache,
-                                 ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
-                                 OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo,
-                                 BotMessageRepo botMessageRepo) {
+    public UserRequestFiller(QuestionActionRepo questionActionRepo,
+                             QuestionRepo questionRepo, QuestionIdAndNextCache questionIdAndNextCache,
+                             ButtonAndMessageCache buttonMessageCache, MessageBoolCache messageBoolCache, BotStateCache botStateCache,
+                             OrderCache orderCache, RabbitMQService rabbitMQService, OfferCache offerCache, UserRepo userRepo,
+                             BotMessageRepo botMessageRepo) {
         this.questionActionRepo = questionActionRepo;
         this.questionRepo = questionRepo;
         this.questionIdAndNextCache = questionIdAndNextCache;

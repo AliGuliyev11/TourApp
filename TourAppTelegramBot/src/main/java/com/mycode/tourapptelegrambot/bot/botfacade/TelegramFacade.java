@@ -361,20 +361,26 @@ public class TelegramFacade {
      * @return BotStateSendMessage see also dto package
      */
 
+
     public BotStateSendMessage continueCase(Long userId, String chatId, Integer messageId) {
         SendMessage replyMessage;
         BotState botState = null;
         if (buttonTypeAndMessage.get(userId) != null) {
-            Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
-            replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
-                    question, buttonTypeAndMessage, messageBoolCache, botMessageRepo, orderCache.get(userId).getLanguages());
-            botState = BotState.FILLING_TOUR;
+            MyUser myUser = userRepo.findById(userId).get();
+            if (myUser.getPhoneNumber() != null) {
+                replyMessage = SendMessage.builder().chatId(chatId)
+                        .text(getBotMessage("continue.message", orderCache.get(userId).getLanguages(), botMessageRepo)).parseMode("HTML").build();
+            } else {
+                Question question = questionRepo.findById(questionIdAndNextCache.get(userId).getPrev()).get();
+                replyMessage = new UniversalInlineButtons().sendInlineKeyBoardMessage(userId, chatId, messageId, questionIdAndNextCache,
+                        question, buttonTypeAndMessage, messageBoolCache, botMessageRepo, orderCache.get(userId).getLanguages());
+                botState = BotState.FILLING_TOUR;
+            }
         } else {
             if (orderCache.get(userId).getLanguages() == null) {
                 replyMessage = SendMessage.builder().chatId(chatId)
                         .text(getBotMessage("stop.continue", "AZ", botMessageRepo)).parseMode("HTML").build();
             } else {
-                System.out.println();
                 replyMessage = SendMessage.builder().chatId(chatId)
                         .text(getBotMessage("continue.message", orderCache.get(userId).getLanguages(), botMessageRepo)).parseMode("HTML").build();
             }
@@ -426,8 +432,8 @@ public class TelegramFacade {
         offerService.clearUserOffer(userId, uuid);
     }
 
-
-
+    @Value("${start.case.nodata}")
+    String noData;
 
     /**
      * This method for start case
@@ -459,11 +465,9 @@ public class TelegramFacade {
             userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
             return sendMessage;
         }
-        telegramBot.sendPhoto(chatId, "SORRY", "src/main/resources/static/images/nodata.png");
+        telegramBot.sendPhoto(chatId, "\uD83D\uDE34", noData);
         return SendMessage.builder().chatId(chatId).text("").build();
     }
-
-
 
 
     public LinkedList<Language> languageChecker() {

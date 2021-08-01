@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
@@ -32,8 +33,10 @@ public class CalendarUtil {
         List<InlineKeyboardButton> headerRow = new ArrayList<>();
         headerRow.add(createButton(IGNORE, new SimpleDateFormat("MMM yyyy").format(date.toDate())));
         keyboard.add(headerRow);
-        String[] WD =getBotMessage("weekdays", languages,botMessageRepo).split("[,]");
-
+        List<String> WD=Arrays.asList(getBotMessage("weekdays", languages, botMessageRepo).split("[,]"));
+        if (WD.size() != 7) {
+            WD = Arrays.asList("M","T","W","T","F","ST","S");
+        }
         List<InlineKeyboardButton> daysOfWeekRow = new ArrayList<>();
         for (String day : WD) {
             daysOfWeekRow.add(createButton(IGNORE, day));
@@ -46,7 +49,7 @@ public class CalendarUtil {
         int daysInMonth = firstDay.dayOfMonth().getMaximumValue();
         int rows = ((daysInMonth + shift) % 7 > 0 ? 1 : 0) + (daysInMonth + shift) / 7;
         for (int i = 0; i < rows; i++) {
-            keyboard.add(buildRow(firstDay, shift,date));
+            keyboard.add(buildRow(firstDay, shift, date));
             firstDay = firstDay.plusDays(7 - shift);
             shift = 0;
         }
@@ -76,7 +79,7 @@ public class CalendarUtil {
         for (int j = shift; j < 7; j++) {
             if (day <= (date.dayOfMonth().getMaximumValue())) {
 
-                if (localDate.equals(LocalDate.now()) && day==LocalDate.now().getDayOfMonth()) {
+                if (localDate.equals(LocalDate.now()) && day == LocalDate.now().getDayOfMonth()) {
                     row.add(createButton(callbackDate.toString(), "" + Emojis.Clock));
                     day++;
                 } else if (date.isBefore(LocalDate.now()) && day < LocalDate.now().getDayOfMonth()) {

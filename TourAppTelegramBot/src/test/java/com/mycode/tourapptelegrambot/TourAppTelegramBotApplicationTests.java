@@ -2,19 +2,21 @@ package com.mycode.tourapptelegrambot;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.mycode.tourapptelegrambot.bot.botfacade.TelegramFacade;
 import com.mycode.tourapptelegrambot.dto.Offer;
-import com.mycode.tourapptelegrambot.models.MyUser;
-import com.mycode.tourapptelegrambot.models.UserOffer;
+import com.mycode.tourapptelegrambot.models.*;
+import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
+import com.mycode.tourapptelegrambot.repositories.LanguageRepo;
+import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import org.joda.time.LocalDate;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.*;
@@ -23,13 +25,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.boxPrimitiveClass;
 import static com.mycode.tourapptelegrambot.checkTypes.TypeCheck.isPrimitive;
 import static com.mycode.tourapptelegrambot.inlineButtons.AskLanguage.getLanguageButtons;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@AutoConfigureMockMvc
 @SpringBootTest
 class TourAppTelegramBotApplicationTests {
 
@@ -40,6 +43,16 @@ class TourAppTelegramBotApplicationTests {
     @Autowired
     TelegramFacade telegramFacade;
 
+    @Autowired
+    LanguageRepo languageRepo;
+
+    @Autowired
+    QuestionRepo questionRepo;
+
+    @Autowired
+    BotMessageRepo botMessageRepo;
+
+
     @BeforeEach
     void init() {
         message = Mockito.mock(Message.class);
@@ -49,6 +62,7 @@ class TourAppTelegramBotApplicationTests {
     /**
      * Agent sends offer and bot convert this offer to UserOffer
      */
+
 
     @SneakyThrows
     @Test
@@ -74,8 +88,8 @@ class TourAppTelegramBotApplicationTests {
         userOffer.setFirstFive(true);
         userOffer.setMyUser(myUser);
 
-        String expected=mapper.writeValueAsString(userOffer);
-        String actual=mapper.writeValueAsString(converted);
+        String expected = mapper.writeValueAsString(userOffer);
+        String actual = mapper.writeValueAsString(converted);
         System.out.println(expected);
         System.out.println(actual);
         Assertions.assertTrue(expected.equals(actual));
@@ -155,36 +169,91 @@ class TourAppTelegramBotApplicationTests {
         Assertions.assertEquals(expectedLocalDate, localDate);
     }
 
-//    @Test
-//    void getLanguageButtonsTest() {
-//        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-//
-//        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
-//        buttonAz.setText("AZ" + Emojis.Azerbaijan);
-//        InlineKeyboardButton buttonRu = new InlineKeyboardButton();
-//        buttonRu.setText("RU" + Emojis.Russian);
-//        InlineKeyboardButton buttonEn = new InlineKeyboardButton();
-//        buttonEn.setText("EN" + Emojis.English);
-//
-//        buttonAz.setCallbackData("LangButtonAz");
-//        buttonRu.setCallbackData("LangButtonRu");
-//        buttonEn.setCallbackData("LangButtonEn");
-//
-//        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-//        keyboardButtonsRow1.add(buttonAz);
-//        keyboardButtonsRow1.add(buttonRu);
-//        keyboardButtonsRow1.add(buttonEn);
-//
-//        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-//        rowList.add(keyboardButtonsRow1);
-//
-//        inlineKeyboardMarkup.setKeyboard(rowList);
-//
-//        Assertions.assertEquals(inlineKeyboardMarkup, getLanguageButtons(languageRepo.findAll()));
-//
-//    }
+    @Test
+    @Order(1)
+    void getLanguageButtonsNullTest() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        rowList.add(keyboardButtonsRow1);
+
+        inlineKeyboardMarkup.setKeyboard(rowList);
+        LinkedList<Language> languages = telegramFacade.languageChecker();
+        Assertions.assertEquals(inlineKeyboardMarkup, getLanguageButtons(languages));
+
+    }
+
+    @SneakyThrows
+    @Test
+    @Order(2)
+    void addBotMessage() {
+        BotMessage botMessage = new BotMessage();
+        Map<String, String> message = new HashMap<>();
+        message.put("AZ", "Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅");
+        message.put("EN", "Excellent, we will send you suggestions as soon as possible.✅");
+        message.put("RU", "Отлично, мы пришлем вам предложения в кратчайшие сроки.✅");
+        Gson gson = new Gson();
+        String endingMessage = gson.toJson(message);
+        botMessage.setMessage(endingMessage);
+        botMessage.setKeyword("ending.msg");
+        botMessageRepo.save(botMessage);
+    }
+
+    @SneakyThrows
+    @Test
+    @Order(3)
+    void addQuesition() {
+        Question question = new Question();
+        question.setQuestion("{'AZ':'Səyahət tipini seçin\uD83E\uDDF3','EN':'Select the type of travel\uD83E\uDDF3','RU':'Выберите тип путешествия\uD83E\uDDF3'}");
+        question.setFirst(false);
+        question.setRegex(".*");
+        questionRepo.save(question);
+    }
 
 
+    @SneakyThrows
+    @Test
+    @Order(4)
+    void addLanguage() {
+
+        Language language = new Language();
+        language.setLang("AZ");
+        language.setEmoji(Emojis.Azerbaijan.toString());
+        Question q = questionRepo.findById(1l).get();
+        BotMessage b = botMessageRepo.findById(1l).get();
+        language.setQuestions(Set.of(q));
+        language.setBotMessages(Set.of(b));
+        languageRepo.save(language);
+        Assertions.assertEquals(language.getQuestions().isEmpty(), languageRepo.findById(1l).get().getQuestions().isEmpty());
+    }
+
+    @Test
+    @Order(5)
+    void getLanguageButtonsNotNullTest() {
+
+        System.out.println(languageRepo.findById(1l).get());
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        InlineKeyboardButton buttonAz = new InlineKeyboardButton();
+        buttonAz.setText("AZ" + Emojis.Azerbaijan);
+
+        buttonAz.setCallbackData("LangButtonAZ");
+
+        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+        keyboardButtonsRow1.add(buttonAz);
+
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        rowList.add(keyboardButtonsRow1);
+
+
+        inlineKeyboardMarkup.setKeyboard(rowList);
+        LinkedList<Language> languages = telegramFacade.languageChecker();
+        Assertions.assertEquals(inlineKeyboardMarkup, getLanguageButtons(languages));
+
+    }
 
     @Test
     void isPrimitiveTypeTest() {

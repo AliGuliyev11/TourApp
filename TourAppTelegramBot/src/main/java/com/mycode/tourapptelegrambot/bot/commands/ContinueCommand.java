@@ -11,4 +11,5 @@ public class ContinueCommand extends BotCommand {
     public ContinueCommand() {
         super("continue","Continue\u2049\uFE0F");
     }
+
 }

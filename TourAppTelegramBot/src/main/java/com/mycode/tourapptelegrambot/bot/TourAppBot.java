@@ -10,10 +10,13 @@ import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
+import org.telegram.telegrambots.meta.api.methods.commands.GetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -124,8 +127,8 @@ public class TourAppBot extends TelegramWebhookBot {
         try {
             image = ResourceUtils.getFile(imagePath);
         } catch (IOException e) {
-                saveImage(imagePath, fileDestination);
-                image = ResourceUtils.getFile(fileDestination);
+            saveImage(imagePath, fileDestination);
+            image = ResourceUtils.getFile(fileDestination);
         }
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
@@ -135,7 +138,7 @@ public class TourAppBot extends TelegramWebhookBot {
         sendPhoto.setCaption(imageCaption);
         try {
             execute(sendPhoto);
-        }catch (Exception e){
+        } catch (Exception e) {
             sendPhoto.setPhoto(new InputFile().setMedia(ResourceUtils.getFile(fileDestination)));
             execute(sendPhoto);
         }
@@ -154,7 +157,7 @@ public class TourAppBot extends TelegramWebhookBot {
             }
             is.close();
             os.close();
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 

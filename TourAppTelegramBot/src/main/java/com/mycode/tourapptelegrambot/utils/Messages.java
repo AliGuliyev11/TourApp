@@ -11,7 +11,7 @@ public class Messages {
             return "\uD83D\uDE04";
         }else{
             JSONObject message = new JSONObject(botMessage.getMessage());
-            return message.getString(language);
+            return message.getString(language.toUpperCase());
         }
 
     }

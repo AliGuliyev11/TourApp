@@ -84,8 +84,8 @@ public class OfferConsumer {
     public void warningConsumer(WarningDto warningDto) {
             MyUser user = userRepo.getMyUserByUuid(warningDto.getUserId());
             if (user!=null){
-                user.setUuid(UUID.randomUUID().toString());
-                userRepo.save(user);
+//                user.setUuid(UUID.randomUUID().toString());
+//                userRepo.save(user);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text(warningDto.getText()).build());
             }
     }

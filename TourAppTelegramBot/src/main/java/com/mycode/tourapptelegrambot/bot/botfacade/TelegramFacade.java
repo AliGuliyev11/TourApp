@@ -44,7 +44,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,10 +52,9 @@ import static com.mycode.tourapptelegrambot.utils.CalendarUtil.IGNORE;
 import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 
 /**
- * This is main telegram bot class
- *
  * @author Ali Guliyev
  * @version 1.0
+ * @implNote This is main telegram bot class
  * @apiNote Every request enters this class
  */
 
@@ -191,10 +189,7 @@ public class TelegramFacade {
      */
 
     private boolean checkIsCommand(String text) {
-        if (text.equals("/start") || text.equals("/stop") || text.equals("/continue")) {
-            return true;
-        }
-        return false;
+        return text.equals("/start") || text.equals("/stop") || text.equals("/continue");
     }
 
 
@@ -788,7 +783,7 @@ public class TelegramFacade {
      * Method for set calendar LocalDate field
      *
      * @param buttonQuery callback query
-     * @param keyword
+     * @param keyword     keyword for adding map,which comes from DB
      * @param userId      current user id
      * @param type        current question type @see QuestionType enum
      * @param userOrder   current user order
@@ -803,7 +798,6 @@ public class TelegramFacade {
         if (localDate.isBefore(LocalDate.now())) {
             return sendAnswerCallbackQuery(getBotMessage("prev.calendar", userOrder.getLanguages(), botMessageRepo), buttonQuery);
         }
-        Date date = localDate.toDate();
         userOrder.getOrder().put(keyword, text.toString());
         buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(type)
                 .message(text.toString()).build());
@@ -815,15 +809,14 @@ public class TelegramFacade {
     /**
      * Mapping button data to order
      *
-     * @param item
-     * @param keyword
+     * @param item contains question text and button type
+     * @param keyword question action keyword for adding map dynamically,which comes from DB
      * @param userOrder current user order
      * @param userId    current user id
      */
 
     @SneakyThrows
-    private void setButtonTypeDataToOrder(QuestionActionDto item, String keyword, CurrentOrder userOrder, Long
-            userId) {
+    private void setButtonTypeDataToOrder(QuestionActionDto item, String keyword, CurrentOrder userOrder, Long userId) {
         userOrder.getOrder().put(keyword, item.text);
         buttonTypeAndMessage.save(CurrentButtonTypeAndMessage.builder().userId(userId).questionType(QuestionType.valueOf(item.getButtonType()))
                 .message(item.text).build());

@@ -4,6 +4,13 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentBotState;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote repository class for cache
+ */
+
+
 @Repository
 public class BotStateCache {
     public static final String HASH_KEY = "BotStateCache";

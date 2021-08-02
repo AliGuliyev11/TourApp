@@ -1,10 +1,12 @@
 package com.mycode.tourapptelegrambot.repositories;
 
-import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.models.QuestionAction;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ */
 
 public interface QuestionActionRepo extends JpaRepository<QuestionAction,Long> {
 

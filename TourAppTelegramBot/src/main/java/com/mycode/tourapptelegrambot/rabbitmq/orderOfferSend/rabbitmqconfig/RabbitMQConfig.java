@@ -10,6 +10,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote publisher configuration class
+ */
+
+
 @Configuration
 public class RabbitMQConfig {
 

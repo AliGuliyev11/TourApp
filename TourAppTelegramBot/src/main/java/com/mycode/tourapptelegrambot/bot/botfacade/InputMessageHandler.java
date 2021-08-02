@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 /** @author Ali Guliyev
  * @version 1.0 */
+
 public interface InputMessageHandler {
     SendMessage handle(Message message);
 

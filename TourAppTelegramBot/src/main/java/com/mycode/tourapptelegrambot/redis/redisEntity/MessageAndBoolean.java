@@ -7,6 +7,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.io.Serializable;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote cache entity
+ */
+
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor

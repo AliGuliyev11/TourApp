@@ -9,9 +9,7 @@ import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
 import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
-import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.services.OfferService;
-import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +18,13 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
-import java.util.UUID;
-
 import static com.mycode.tourapptelegrambot.inlineButtons.AcceptOffer.getAcceptButtons;
 import static com.mycode.tourapptelegrambot.inlineButtons.LoadMore.getLoadButtons;
+
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ */
 
 @Service
 public class OfferConsumer {
@@ -47,6 +48,10 @@ public class OfferConsumer {
 
     @Value("${offer.count}")
     private int maxOfferCount;
+
+    /** This method for getting agents offer
+     * @implNote If offer count bigger than 5 sending load more button
+     * @param offer agent's offer*/
 
     @SneakyThrows
     @RabbitListener(queues = "offerQueue")
@@ -79,13 +84,15 @@ public class OfferConsumer {
         System.out.println(offer);
     }
 
+    /** This method for sendind warning message from agent
+     * @implNote If user request expired sending warning message to user
+     * @param warningDto agent's warning message*/
+
     @SneakyThrows
     @RabbitListener(queues = "offerMadeQueue")
     public void warningConsumer(WarningDto warningDto) {
             MyUser user = userRepo.getMyUserByUuid(warningDto.getUserId());
             if (user!=null){
-//                user.setUuid(UUID.randomUUID().toString());
-//                userRepo.save(user);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text(warningDto.getText()).build());
             }
     }

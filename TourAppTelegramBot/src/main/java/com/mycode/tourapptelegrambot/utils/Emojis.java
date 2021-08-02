@@ -3,7 +3,10 @@ package com.mycode.tourapptelegrambot.utils;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.AllArgsConstructor;
 
-/** This enum for emojis */
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * This enum for emojis */
 
 @AllArgsConstructor
 public enum Emojis {

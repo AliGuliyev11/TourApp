@@ -41,14 +41,13 @@ public class OfferService {
     private final BotMessageRepo botMessageRepo;
 
     public OfferService(UserOfferRepo userOfferRepo, @Lazy TourAppBot tourAppBot, OfferCache offerCache,
-                        RabbitMQService stopService, OrderCache orderCache, LocaleMessageService messageService,
-                        BotMessageRepo botMessageRepo) {
+                        RabbitMQService stopService, OrderCache orderCache, BotMessageRepo botMessageRepo) {
         this.userOfferRepo = userOfferRepo;
         this.tourAppBot = tourAppBot;
         this.offerCache = offerCache;
         this.rabbitStopService = stopService;
         this.orderCache = orderCache;
-        this.botMessageRepo=botMessageRepo;
+        this.botMessageRepo = botMessageRepo;
     }
 
     public void save(Offer offer, MyUser user, boolean isFive) {
@@ -64,9 +63,18 @@ public class OfferService {
 
     @Value("${offer.count}")
     private int maxOfferCount;
+
+    /**
+     * This method for if offer count bigger than maxOfferCount
+     *
+     * @param userId current user id
+     * @param chatId current private chat id
+     * @return List of BotApiMethod<?>
+     */
+
     @SneakyThrows
     public List<BotApiMethod<?>> loadMore(Long userId, String chatId) {
-        List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(maxOfferCount-1).collect(Collectors.toList());
+        List<UserOffer> offers = userOfferRepo.getUserOffersByMyUserId(userId).stream().limit(maxOfferCount - 1).collect(Collectors.toList());
 
         for (UserOffer item : offers) {
             tourAppBot.sendOffer(item.getMyUser().getChatId(), item.getFile(), getAcceptButtons(item.getOfferId(),
@@ -74,53 +82,82 @@ public class OfferService {
             userOfferRepo.deleteById(item.getId());
         }
 
-        List<BotApiMethod<?>> callbackAnswer =checkUserOfferAvailability(userId,chatId);
+        List<BotApiMethod<?>> callbackAnswer = checkUserOfferAvailability(userId, chatId);
 
         saveOfferCache(userId, offers.size());
         return callbackAnswer;
     }
 
+
+    /**
+     * This method for check user have more offer or not
+     *
+     * @param userId current user id
+     * @param chatId current private chat id
+     * @return List of BotApiMethod<?>
+     */
+
     private List<BotApiMethod<?>> checkUserOfferAvailability(Long userId, String chatId) {
-        List<BotApiMethod<?>> callbackAnswer=new ArrayList<>();
+        List<BotApiMethod<?>> callbackAnswer = new ArrayList<>();
         if (!userOfferRepo.getUserOffersByMyUserId(userId).isEmpty()) {
             callbackAnswer.add(SendMessage.builder().chatId(chatId).text("\u2B07\uFE0F")
                     .replyMarkup(getLoadButtons(orderCache.get(userId), botMessageRepo)).build());
         } else {
             offerCache.save(OfferCount.builder().userId(userId).count(0).build());
             callbackAnswer.add(SendMessage.builder().chatId(chatId)
-                    .text(getBotMessage("no.more.load", orderCache.get(userId).getLanguages(),botMessageRepo)).build());
+                    .text(getBotMessage("no.more.load", orderCache.get(userId).getLanguages(), botMessageRepo)).build());
         }
         return callbackAnswer;
     }
 
 
+    /** This method for saving offer count to cache
+     * @param userId current user id
+     * @param size offer size*/
 
     private void saveOfferCache(Long userId, int size) {
         if (size == maxOfferCount) {
             offerCache.save(OfferCount.builder().userId(userId).count(size + 1).build());
         } else {
-            int count=offerCache.get(userId)>=maxOfferCount?0:offerCache.get(userId);
-            int offerCount=count+size;
-            offerCache.save(OfferCount.builder().userId(userId).count(offerCount!=5?offerCount:offerCount+1).build());
+            int count = offerCache.get(userId) >= maxOfferCount ? 0 : offerCache.get(userId);
+            int offerCount = count + size;
+            offerCache.save(OfferCount.builder().userId(userId).count(offerCount != 5 ? offerCount : offerCount + 1).build());
         }
     }
 
+    /** This method for checking user offer
+     * @param userId current user id
+     */
 
     public boolean checkUserOffer(Long userId) {
         return userOfferRepo.checkUserOffer(userId);
     }
 
+    /** This method for find user offer by id
+     * @param offerId offer id
+     * @return UserOffer
+     */
 
     public UserOffer findById(Long offerId) {
         return userOfferRepo.findById(offerId).get();
     }
 
-    public void acceptOffer(Long offerId,String phoneNumber) {
+
+    /** This method for if user accept some agent's offer
+     * @param offerId offer id
+     * @param phoneNumber bot user phone number
+     */
+
+    public void acceptOffer(Long offerId, String phoneNumber) {
         System.out.println(offerId);
-        ReplyToOffer replyToOffer= ReplyToOffer.builder().offerId(offerId).phoneNumber(phoneNumber).build();
+        ReplyToOffer replyToOffer = ReplyToOffer.builder().offerId(offerId).phoneNumber(phoneNumber).build();
         rabbitStopService.reply(replyToOffer);
     }
 
+    /** This method for stop case
+     * @param userId current user id
+     * @param uuid current user's UUID
+     */
 
     @Transactional(propagation = Propagation.REQUIRED)
     public void clearUserOffer(Long userId, String uuid) {

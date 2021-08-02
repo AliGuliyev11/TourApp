@@ -12,7 +12,6 @@ import com.mycode.tourapptelegrambot.enums.QuestionType;
 import com.mycode.tourapptelegrambot.models.Question;
 import com.mycode.tourapptelegrambot.redis.RedisCache.QuestionIdAndNextCache;
 import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
-import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import com.mycode.tourapptelegrambot.utils.CalendarUtil;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
@@ -27,10 +26,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * This class for creating inline keyboard buttons dynamically
+ * @author Ali Guliyev
+ * @version 1.0
+ *
+ * @implNote This class for creating inline keyboard buttons dynamically
  * With the help of QuestionType enum
  */
 
@@ -40,11 +41,9 @@ public class UniversalInlineButtons {
     @SneakyThrows
     public SendMessage sendInlineKeyBoardMessage(Long userId, String chatId, int messageId, QuestionIdAndNextCache cache,
                                                  Question question, ButtonAndMessageCache buttonAndMessageCache,
-                                                 MessageBoolCache messageBoolCache, BotMessageRepo botMessageRepo,
-                                                 String languages) {
+                                                 MessageBoolCache messageBoolCache, BotMessageRepo botMessageRepo, String languages) {
         JSONObject questionText = new JSONObject(question.getQuestion());
         QuestionAction questionAction = question.getQuestionActions();
-
 
         JSONObject jsonObject = new JSONObject(questionAction.getText());
         JSONObject convertedQuestionAction = jsonObject.getJSONObject(languages.toUpperCase());
@@ -64,7 +63,7 @@ public class UniversalInlineButtons {
             questionType = QuestionType.valueOf(item.buttonType);
             if (!item.getButtonType().equals(QuestionType.Free_Text.name()) && !item.getButtonType().equals(QuestionType.Button_Calendar.name())
                     && !item.getButtonType().equals(QuestionType.Button_Numeric.name()) && !item.getButtonType().equals(QuestionType.Button_Keyboard.name())) {
-                rowList.add(addInlineKeyboardButton(item.getText(), questionAction.getKeyword(),item.callbackData));
+                rowList.add(addInlineKeyboardButton(item.getText(), questionAction.getKeyword(), item.callbackData));
                 messageBoolCache.save(MessageAndBoolean.builder().userId(userId).send(false).MessageId(messageId).build());
             } else if (item.getButtonType().equals(QuestionType.Button_Calendar.name())) {
                 cache.save(QuestionIdAndNext.builder().userId(userId).questionId(questionId).prev(prev).next(next).regex(question.getRegex()).build());
@@ -109,7 +108,7 @@ public class UniversalInlineButtons {
     }
 
 
-    private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword,String callbackData) {
+    private List<InlineKeyboardButton> addInlineKeyboardButton(String text, String keyword, String callbackData) {
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
         InlineKeyboardButton keyboardButton = InlineKeyboardButton.builder().text(text).callbackData(keyword + callbackData).build();
         keyboardButtonsRow1.add(keyboardButton);

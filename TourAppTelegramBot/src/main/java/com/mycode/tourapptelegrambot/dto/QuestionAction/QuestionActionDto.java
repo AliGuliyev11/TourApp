@@ -1,12 +1,14 @@
 package com.mycode.tourapptelegrambot.dto.QuestionAction;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mycode.tourapptelegrambot.models.QuestionAction;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+/** @author Ali Guliyev
+ * @version 1.0
+ * @implNote  This DTO for json converter from DB,see also QAConverter DTO*/
+
 
 @Getter
 @Setter

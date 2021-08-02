@@ -7,6 +7,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote publisher service class
+ */
+
+
 @Service(value = "sendOrder")
 public class RabbitMQService {
     private final RabbitTemplate template;

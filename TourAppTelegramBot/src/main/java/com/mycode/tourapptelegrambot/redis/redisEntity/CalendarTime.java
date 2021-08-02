@@ -6,6 +6,13 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote cache entity
+ */
+
+
 @Getter
 @Setter
 @Builder(toBuilder = true)

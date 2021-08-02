@@ -2,7 +2,6 @@ package com.mycode.tourapptelegrambot.utils;
 
 
 import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
-import com.mycode.tourapptelegrambot.services.LocaleMessageService;
 import org.joda.time.LocalDate;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -15,7 +14,9 @@ import java.util.List;
 import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 
 /**
- * This class for create calendar when QuestionType is Button_Calendar
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote This class for create calendar when QuestionType is Button_Calendar
  */
 
 

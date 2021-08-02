@@ -8,6 +8,11 @@ import javax.persistence.*;
 import java.io.File;
 import java.io.Serializable;
 
+/** @author Ali Guliyev
+ * @version 1.0
+ * @implNote  This DTO for getting offer from agent*/
+
+
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

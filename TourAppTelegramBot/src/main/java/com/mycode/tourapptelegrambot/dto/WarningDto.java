@@ -5,6 +5,10 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 
+/** @author Ali Guliyev
+ * @version 1.0
+ * @implNote  This DTO for getting warning message from agent*/
+
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

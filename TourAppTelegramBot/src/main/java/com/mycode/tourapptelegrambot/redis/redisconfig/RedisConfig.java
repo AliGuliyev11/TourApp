@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.redis.redisconfig;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -9,14 +10,27 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote config class for cache
+ */
+
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {
+
+    @Value("${spring.redis.host}")
+    String hostName;
+
+    @Value("${spring.redis.port}")
+    int port;
+
     @Bean
     public JedisConnectionFactory connectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName("localhost");
-        configuration.setPort(6379);
+        configuration.setHostName(hostName);
+        configuration.setPort(port);
         return new JedisConnectionFactory(configuration);
     }
 

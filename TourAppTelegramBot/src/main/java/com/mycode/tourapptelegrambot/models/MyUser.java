@@ -5,6 +5,11 @@ import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ */
+
 @Entity
 @Getter
 @Setter

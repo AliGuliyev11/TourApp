@@ -1,6 +1,6 @@
 package com.mycode.tourapptelegrambot.checkTypes;
 
-/**This class for type checking
+/**@implNote  This class for type checking
  * @author Ali Guliyev
  * @version 1.0*/
 

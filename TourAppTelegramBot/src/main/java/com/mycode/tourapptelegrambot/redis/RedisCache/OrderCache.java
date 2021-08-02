@@ -4,6 +4,12 @@ import com.mycode.tourapptelegrambot.redis.redisEntity.CurrentOrder;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+/**
+ * @author Ali Guliyev
+ * @version 1.0
+ * @implNote repository class for cache
+ */
+
 @Repository
 public class OrderCache {
     public static final String HASH_KEY = "TelegramOrderMapCache";

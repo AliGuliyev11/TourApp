@@ -5,7 +5,10 @@ import com.mycode.tourapptelegrambot.bot.commands.ContinueCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StartCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StopCommand;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -18,11 +21,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
 import java.io.*;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Telegram bot class where Webhook extends and setted
@@ -120,12 +126,20 @@ public class TourAppBot extends TelegramWebhookBot {
 
     @SneakyThrows
     public void sendPhoto(String chatId, String imageCaption, String imagePath) {
-        File image;
+        ClassLoader cl = this.getClass().getClassLoader();
+
+
+        File image = null;
+        if (!image.exists()) {
+            image.mkdirs();
+        }
         try {
-            image = ResourceUtils.getFile(imagePath);
+            InputStream inputStream = cl.getResourceAsStream(imagePath);
+            image =new InputStreamResource(inputStream).getFile();
         } catch (IOException e) {
             saveImage(imagePath, fileDestination);
-            image = ResourceUtils.getFile(fileDestination);
+            InputStream inputStream = cl.getResourceAsStream(fileDestination);
+            image = new InputStreamResource(inputStream).getFile();
         }
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
@@ -136,7 +150,8 @@ public class TourAppBot extends TelegramWebhookBot {
         try {
             execute(sendPhoto);
         } catch (Exception e) {
-            sendPhoto.setPhoto(new InputFile().setMedia(ResourceUtils.getFile(fileDestination)));
+            InputStream inputStream = cl.getResourceAsStream(fileDestination);
+            sendPhoto.setPhoto(new InputFile().setMedia(new InputStreamResource(inputStream).getFile()));
             execute(sendPhoto);
         }
 

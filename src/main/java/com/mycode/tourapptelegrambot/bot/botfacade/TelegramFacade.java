@@ -31,6 +31,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -460,7 +461,9 @@ public class TelegramFacade {
             userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
             return sendMessage;
         }
-        telegramBot.sendPhoto(chatId, "\uD83D\uDE34", noData);
+        ClassLoader cl = this.getClass().getClassLoader();
+        InputStream inputStream = cl.getResourceAsStream(noData);
+        telegramBot.sendPhoto(chatId, "\uD83D\uDE34", new InputStreamResource(inputStream).getFile().getAbsolutePath());
         return SendMessage.builder().chatId(chatId).text("").build();
     }
 

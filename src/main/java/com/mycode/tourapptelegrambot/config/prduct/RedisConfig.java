@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
  * @implNote config class for cache
  */
 
-@Profile(value = "!dev")
+@Profile("!dev")
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {

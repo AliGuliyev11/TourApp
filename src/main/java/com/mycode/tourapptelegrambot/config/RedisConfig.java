@@ -17,7 +17,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @implNote config class for cache
  */
 
-@Profile(value = "dev")
+@Profile("dev")
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {

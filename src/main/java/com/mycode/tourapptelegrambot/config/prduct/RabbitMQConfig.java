@@ -102,8 +102,8 @@ public class RabbitMQConfig {
         return factory;
     }
 
-    @Bean("rabbitTemplate")
-    public RabbitTemplate template() throws URISyntaxException {
+    @Bean
+    public RabbitTemplate rabbitTemplate() throws URISyntaxException {
         RabbitTemplate temp = new RabbitTemplate(connectionFactory());
         temp.setMessageConverter(messageConverter());
         return temp;

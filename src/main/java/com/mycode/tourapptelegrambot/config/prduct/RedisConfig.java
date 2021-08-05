@@ -27,8 +27,8 @@ import java.net.URISyntaxException;
 @EnableRedisRepositories
 public class RedisConfig {
 
-    @Bean("redisTemplate")
-    public RedisTemplate<String, Object> template() throws URISyntaxException {
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() throws URISyntaxException {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());

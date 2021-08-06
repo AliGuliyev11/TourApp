@@ -56,10 +56,6 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(queue).to(exchange).with(ORDER_KEY);
     }
 
-    @Bean
-    MessageConverter messageConverter(){
-        return new Jackson2JsonMessageConverter();
-    }
 
     @Bean
     Queue stopRabbitQueue(){
@@ -94,6 +90,50 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(queue).to(exchange).with(OFFER_REPLY_KEY);
     }
 
+
+
+    public final static String OFFER_QUEUE="offerQueue";
+    public final static String OFFER_EXCHANGE="offerExchange";
+    public final static String OFFER_KEY="offerKey";
+
+    public final static String OFFER_MADE_QUEUE="offerMadeQueue";
+    public final static String OFFER_MADE_EXCHANGE="offerMadeExchange";
+    public final static String OFFER_MADE_KEY="offerMadeKey";
+
+    @Bean(name = "offerQueue")
+    Queue rabbitOfferQueue(){
+        Queue orderQueue = new Queue(OFFER_QUEUE, true);
+        return orderQueue;
+    }
+
+    @Bean(name = "offerExchange")
+    DirectExchange rabbitOfferExchange(){
+        return new DirectExchange(OFFER_EXCHANGE);
+    }
+
+    @Bean(name = "offerBind")
+    Binding offerBind(@Qualifier("offerQueue") Queue queue, @Qualifier("offerExchange") DirectExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(OFFER_KEY);
+    }
+
+
+    @Bean(name = "offerMadeQueue")
+    Queue offerMadeQueue(){
+        Queue orderQueue = new Queue(OFFER_MADE_QUEUE, true);
+        return orderQueue;
+    }
+
+    @Bean(name = "offerMadeExchange")
+    DirectExchange offerMadeExchange(){
+        return new DirectExchange(OFFER_MADE_EXCHANGE);
+    }
+
+    @Bean(name = "offerMadeBind")
+    Binding offerMadeBind(@Qualifier("offerMadeQueue") Queue queue, @Qualifier("offerMadeExchange") DirectExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(OFFER_MADE_KEY);
+    }
+
+
     @Bean
     public ConnectionFactory connectionFactory() throws URISyntaxException {
         final URI rabbitMqUrl = new URI(System.getenv("CLOUDAMQP_URL"));
@@ -107,6 +147,11 @@ public class RabbitMQConfig {
         RabbitTemplate temp = new RabbitTemplate(connectionFactory());
         temp.setMessageConverter(messageConverter());
         return temp;
+    }
+
+    @Bean
+    MessageConverter messageConverter(){
+        return new Jackson2JsonMessageConverter();
     }
 
 }

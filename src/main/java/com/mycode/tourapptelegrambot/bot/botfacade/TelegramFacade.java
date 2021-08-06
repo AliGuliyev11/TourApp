@@ -461,9 +461,9 @@ public class TelegramFacade {
             userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
             return sendMessage;
         }
-        ClassLoader cl = this.getClass().getClassLoader();
-        InputStream inputStream = cl.getResourceAsStream(noData);
-        telegramBot.sendPhoto(chatId, "\uD83D\uDE34", new InputStreamResource(inputStream).getFile().getAbsolutePath());
+//        ClassLoader cl = this.getClass().getClassLoader();
+//        InputStream inputStream = cl.getResourceAsStream(noData);
+        telegramBot.sendPhoto(chatId, "\uD83D\uDE34", noData);
         return SendMessage.builder().chatId(chatId).text("").build();
     }
 

@@ -1,15 +1,20 @@
 package com.mycode.tourapptelegrambot.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author Ali Guliyev
@@ -17,35 +22,26 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @implNote config class for cache
  */
 
-@Profile("dev")
 @Configuration
+@Profile("dev")
 @EnableRedisRepositories
 public class RedisConfig {
 
-    @Value("${spring.redis.host}")
-    String hostName;
-
-    @Value("${spring.redis.port}")
-    int port;
 
     @Bean
-    public JedisConnectionFactory connectionFactory() {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName(hostName);
-        configuration.setPort(port);
-        return new JedisConnectionFactory(configuration);
+    public RedisConnectionFactory jedisConnectionFactory() throws URISyntaxException {
+        return new LettuceConnectionFactory();
     }
 
     @Bean
-    public RedisTemplate<String, Object> template() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory());
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new JdkSerializationRedisSerializer());
-        template.setValueSerializer(new JdkSerializationRedisSerializer());
-        template.setEnableTransactionSupport(true);
-        template.afterPropertiesSet();
-        return template;
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new JdkSerializationRedisSerializer());
+        redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
+        redisTemplate.setEnableTransactionSupport(true);
+        redisTemplate.afterPropertiesSet();
+        return redisTemplate;
     }
 }

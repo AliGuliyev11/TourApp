@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class QuestionIdAndNextCache {
     public static final String HASH_KEY = "QuestionCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public QuestionIdAndNextCache(RedisTemplate template) {
+    public QuestionIdAndNextCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

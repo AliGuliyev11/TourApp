@@ -11,6 +11,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -24,6 +25,7 @@ import static com.mycode.tourapptelegrambot.utils.Messages.getBotMessage;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @AutoConfigureMockMvc
 @SpringBootTest
+@ActiveProfiles("dev")
 public class TestingBotMessage {
 
     @Autowired
@@ -45,7 +47,7 @@ public class TestingBotMessage {
         String language = "AZ";
         String keyword = "ending.msg";
         String expected = "Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅";
-        Assertions.assertEquals(expected, getBotMessage(keyword, language, botMessageRepo));    
+        Assertions.assertEquals(expected, getBotMessage(keyword, language, botMessageRepo));
     }
 
     @Test

@@ -17,8 +17,8 @@ import org.springframework.context.annotation.Profile;
  * @implNote publisher configuration class
  */
 
-@Profile("dev")
 @Configuration
+@Profile("dev")
 public class RabbitMQConfig {
 
 

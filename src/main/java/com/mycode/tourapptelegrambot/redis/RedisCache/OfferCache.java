@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class OfferCache {
     public static final String HASH_KEY = "OfferCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public OfferCache(RedisTemplate template) {
+    public OfferCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

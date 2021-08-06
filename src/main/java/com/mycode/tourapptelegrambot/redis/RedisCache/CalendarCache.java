@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class CalendarCache {
     public static final String HASH_KEY = "CalendarCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public CalendarCache(RedisTemplate template) {
+    public CalendarCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

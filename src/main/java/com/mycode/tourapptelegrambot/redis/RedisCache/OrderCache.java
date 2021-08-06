@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class OrderCache {
     public static final String HASH_KEY = "TelegramOrderMapCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public OrderCache(RedisTemplate template) {
+    public OrderCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

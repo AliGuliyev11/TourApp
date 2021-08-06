@@ -1,12 +1,10 @@
 package com.mycode.tourapptelegrambot.config.prduct;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -22,21 +20,21 @@ import java.net.URISyntaxException;
  * @implNote config class for cache
  */
 
-@Profile("!dev")
 @Configuration
+@Profile("!dev")
 @EnableRedisRepositories
 public class RedisConfig {
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate() throws URISyntaxException {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(jedisConnectionFactory());
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new JdkSerializationRedisSerializer());
-        template.setValueSerializer(new JdkSerializationRedisSerializer());
-        template.setEnableTransactionSupport(true);
-        template.afterPropertiesSet();
-        return template;
+        RedisTemplate<String, Object> objectRedisTemplate = new RedisTemplate<>();
+        objectRedisTemplate.setConnectionFactory(jedisConnectionFactory());
+        objectRedisTemplate.setKeySerializer(new StringRedisSerializer());
+        objectRedisTemplate.setHashKeySerializer(new JdkSerializationRedisSerializer());
+        objectRedisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
+        objectRedisTemplate.setEnableTransactionSupport(true);
+        objectRedisTemplate.afterPropertiesSet();
+        return objectRedisTemplate;
     }
 
     @Bean
@@ -49,5 +47,4 @@ public class RedisConfig {
         configuration.setPassword(redisUri.getUserInfo().split(":", 2)[1]);
         return new LettuceConnectionFactory(configuration);
     }
-
 }

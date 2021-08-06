@@ -126,20 +126,12 @@ public class TourAppBot extends TelegramWebhookBot {
 
     @SneakyThrows
     public void sendPhoto(String chatId, String imageCaption, String imagePath) {
-        ClassLoader cl = this.getClass().getClassLoader();
-
-
-        File image = null;
-        if (!image.exists()) {
-            image.mkdirs();
-        }
+        File image;
         try {
-            InputStream inputStream = cl.getResourceAsStream(imagePath);
-            image =new InputStreamResource(inputStream).getFile();
+            image = ResourceUtils.getFile(imagePath);
         } catch (IOException e) {
             saveImage(imagePath, fileDestination);
-            InputStream inputStream = cl.getResourceAsStream(fileDestination);
-            image = new InputStreamResource(inputStream).getFile();
+            image = ResourceUtils.getFile(fileDestination);
         }
         InputFile inputFile = new InputFile();
         inputFile.setMedia(image);
@@ -150,8 +142,7 @@ public class TourAppBot extends TelegramWebhookBot {
         try {
             execute(sendPhoto);
         } catch (Exception e) {
-            InputStream inputStream = cl.getResourceAsStream(fileDestination);
-            sendPhoto.setPhoto(new InputFile().setMedia(new InputStreamResource(inputStream).getFile()));
+            sendPhoto.setPhoto(new InputFile().setMedia(ResourceUtils.getFile(fileDestination)));
             execute(sendPhoto);
         }
 

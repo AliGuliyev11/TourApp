@@ -14,9 +14,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class BotStateCache {
     public static final String HASH_KEY = "BotStateCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public BotStateCache(RedisTemplate template) {
+    public BotStateCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

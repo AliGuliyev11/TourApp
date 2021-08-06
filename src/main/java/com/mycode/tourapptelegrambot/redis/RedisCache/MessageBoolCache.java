@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class MessageBoolCache {
     public static final String HASH_KEY = "MessageCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public MessageBoolCache(RedisTemplate template) {
+    public MessageBoolCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

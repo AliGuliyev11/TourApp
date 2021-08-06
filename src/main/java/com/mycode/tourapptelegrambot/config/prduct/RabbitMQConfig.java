@@ -23,8 +23,8 @@ import java.net.URISyntaxException;
  * @implNote publisher configuration class
  */
 
-@Profile("!dev")
 @Configuration
+@Profile("!dev")
 public class RabbitMQConfig {
 
 

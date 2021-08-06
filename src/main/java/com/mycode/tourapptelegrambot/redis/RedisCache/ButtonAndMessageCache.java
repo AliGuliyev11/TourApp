@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ButtonAndMessageCache {
     public static final String HASH_KEY = "CurrentButtonTypeAndMessageCache";
-    private RedisTemplate template;
+    private RedisTemplate<String,Object> template;
 
-    public ButtonAndMessageCache(RedisTemplate template) {
+    public ButtonAndMessageCache(RedisTemplate<String,Object> template) {
         this.template = template;
     }
 

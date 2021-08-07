@@ -73,12 +73,8 @@ public class RabbitMQConfig {
 
 
     public final static String OFFER_QUEUE="offerQueue";
-    public final static String OFFER_EXCHANGE="offerExchange";
-    public final static String OFFER_KEY="offerKey";
 
     public final static String OFFER_MADE_QUEUE="offerMadeQueue";
-    public final static String OFFER_MADE_EXCHANGE="offerMadeExchange";
-    public final static String OFFER_MADE_KEY="offerMadeKey";
 
     @Bean(name = "offerQueue")
     Queue rabbitOfferQueue(){

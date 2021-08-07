@@ -18,6 +18,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -185,26 +187,26 @@ class TourAppTelegramBotApplicationTests {
 
     }
 
-    @SneakyThrows
-    @Test
-    @Order(2)
-    void addBotMessage() {
-        BotMessage botMessage = new BotMessage();
-        Map<String, String> message = new HashMap<>();
-        message.put("AZ", "Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅");
-        message.put("EN", "Excellent, we will send you suggestions as soon as possible.✅");
-        message.put("RU", "Отлично, мы пришлем вам предложения в кратчайшие сроки.✅");
-        Gson gson = new Gson();
-        String endingMessage = gson.toJson(message);
-        botMessage.setMessage(endingMessage);
-        botMessage.setKeyword("ending.msg");
-        botMessageRepo.save(botMessage);
-    }
+//    @SneakyThrows
+//    @Test
+//    @Order(2)
+//    void addBotMessage() {
+//        BotMessage botMessage = new BotMessage();
+//        Map<String, String> message = new HashMap<>();
+//        message.put("AZ", "Əla,qısa zamanda sizə təkliflər göndərəcəyik.✅");
+//        message.put("EN", "Excellent, we will send you suggestions as soon as possible.✅");
+//        message.put("RU", "Отлично, мы пришлем вам предложения в кратчайшие сроки.✅");
+//        Gson gson = new Gson();
+//        String endingMessage = gson.toJson(message);
+//        botMessage.setMessage(endingMessage);
+//        botMessage.setKeyword("ending.msg");
+//        botMessageRepo.save(botMessage);
+//    }
 
     @SneakyThrows
     @Test
     @Order(3)
-    void addQuesition() {
+    void addQuestion() {
         Question question = new Question();
         question.setQuestion("{'AZ':'Səyahət tipini seçin\uD83E\uDDF3','EN':'Select the type of travel\uD83E\uDDF3','RU':'Выберите тип путешествия\uD83E\uDDF3'}");
         question.setFirst(false);
@@ -221,10 +223,10 @@ class TourAppTelegramBotApplicationTests {
         Language language = new Language();
         language.setLang("AZ");
         language.setEmoji(Emojis.Azerbaijan.toString());
-        Question q = questionRepo.findById(1l).get();
-        BotMessage b = botMessageRepo.findById(1l).get();
-        language.setQuestions(Set.of(q));
-        language.setBotMessages(Set.of(b));
+        Set<BotMessage> botMessageSet = new HashSet<>(botMessageRepo.findAll());
+        Set<Question> questions = new HashSet<>(questionRepo.findAll());
+        language.setBotMessages(botMessageSet);
+        language.setQuestions(questions);
         languageRepo.save(language);
         Assertions.assertEquals(language.getQuestions().isEmpty(), languageRepo.findById(1l).get().getQuestions().isEmpty());
     }
@@ -232,8 +234,6 @@ class TourAppTelegramBotApplicationTests {
     @Test
     @Order(5)
     void getLanguageButtonsNotNullTest() {
-
-        System.out.println(languageRepo.findById(1l).get());
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
@@ -251,6 +251,7 @@ class TourAppTelegramBotApplicationTests {
 
         inlineKeyboardMarkup.setKeyboard(rowList);
         LinkedList<Language> languages = telegramFacade.languageChecker();
+        System.out.println(languages);
         Assertions.assertEquals(inlineKeyboardMarkup, getLanguageButtons(languages));
 
     }

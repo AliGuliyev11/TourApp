@@ -11,14 +11,13 @@ import com.mycode.tourapptelegrambot.redis.RedisCache.OrderCache;
 import com.mycode.tourapptelegrambot.redis.redisEntity.OfferCount;
 import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.UserOfferRepo;
-import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -50,11 +49,23 @@ public class OfferService {
         this.botMessageRepo = botMessageRepo;
     }
 
+    @Value("${offer.path}")
+    private String offerPath;
+
+    /**
+     * This method for saving offer to DB
+     *
+     * @param offer  agent offer
+     * @param user   current user
+     * @param isFive if offer count in maxCount range isFive is true,else false.See application.properties
+     */
+
+    @SneakyThrows
     public void save(Offer offer, MyUser user, boolean isFive) {
         UserOffer userOffer = new UserOffer();
         userOffer.setUserId(offer.getUserId());
         userOffer.setOfferId(offer.getOfferId());
-        userOffer.setFile(offer.getFile());
+        userOffer.setFile(ResourceUtils.getFile(offerPath));
         userOffer.setMyUser(user);
         userOffer.setFirstFive(isFive);
         userOfferRepo.save(userOffer);
@@ -111,9 +122,12 @@ public class OfferService {
     }
 
 
-    /** This method for saving offer count to cache
+    /**
+     * This method for saving offer count to cache
+     *
      * @param userId current user id
-     * @param size offer size*/
+     * @param size   offer size
+     */
 
     private void saveOfferCache(Long userId, int size) {
         if (size == maxOfferCount) {
@@ -125,7 +139,9 @@ public class OfferService {
         }
     }
 
-    /** This method for checking user offer
+    /**
+     * This method for checking user offer
+     *
      * @param userId current user id
      */
 
@@ -133,7 +149,9 @@ public class OfferService {
         return userOfferRepo.checkUserOffer(userId);
     }
 
-    /** This method for find user offer by id
+    /**
+     * This method for find user offer by id
+     *
      * @param offerId offer id
      * @return UserOffer
      */
@@ -143,8 +161,10 @@ public class OfferService {
     }
 
 
-    /** This method for if user accept some agent's offer
-     * @param offerId offer id
+    /**
+     * This method for if user accept some agent's offer
+     *
+     * @param offerId     offer id
      * @param phoneNumber bot user phone number
      */
 
@@ -154,9 +174,11 @@ public class OfferService {
         rabbitStopService.reply(replyToOffer);
     }
 
-    /** This method for stop case
+    /**
+     * This method for stop case
+     *
      * @param userId current user id
-     * @param uuid current user's UUID
+     * @param uuid   current user's UUID
      */
 
     @Transactional(propagation = Propagation.REQUIRED)

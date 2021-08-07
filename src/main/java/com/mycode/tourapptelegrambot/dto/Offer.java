@@ -1,16 +1,20 @@
 package com.mycode.tourapptelegrambot.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
 import java.io.File;
 import java.io.Serializable;
+import java.util.Arrays;
 
-/** @author Ali Guliyev
+/**
+ * @author Ali Guliyev
  * @version 1.0
- * @implNote  This DTO for getting offer from agent*/
+ * @implNote This DTO for getting offer from agent
+ */
 
 
 @Getter
@@ -22,14 +26,13 @@ import java.io.Serializable;
 public class Offer implements Serializable {
     Long offerId;
     String userId;
-    File file;
+    byte[] file;
 
     @Override
     public String toString() {
         return "Offer{" +
                 "offerId=" + offerId +
                 ", userId='" + userId + '\'' +
-                ", file=" + file +
                 '}';
     }
 }

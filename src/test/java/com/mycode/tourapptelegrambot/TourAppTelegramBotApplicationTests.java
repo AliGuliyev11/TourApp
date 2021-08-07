@@ -11,6 +11,7 @@ import com.mycode.tourapptelegrambot.repositories.LanguageRepo;
 import com.mycode.tourapptelegrambot.repositories.QuestionRepo;
 import com.mycode.tourapptelegrambot.utils.Emojis;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.joda.time.LocalDate;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -61,41 +63,6 @@ class TourAppTelegramBotApplicationTests {
         modelMapper = new ModelMapper();
     }
 
-    /**
-     * Agent sends offer and bot convert this offer to UserOffer
-     */
-
-
-    @SneakyThrows
-    @Test
-    void mapOffer() {
-
-        Offer offer = new Offer();
-        offer.setOfferId(1L);
-        offer.setUserId("3");
-        offer.setFile(new File("src/main/resources/static/docs/image.png"));
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        MyUser myUser = MyUser.builder().id(1l).chatId("2").uuid("13232f").phoneNumber("123354665").build();
-        UserOffer converted = mapper.convertValue(offer, UserOffer.class);
-        converted.setOfferId(offer.getOfferId());
-        converted.setMyUser(myUser);
-        converted.setFirstFive(true);
-
-        UserOffer userOffer = new UserOffer();
-        userOffer.setOfferId(offer.getOfferId());
-        userOffer.setUserId("3");
-        userOffer.setFile(new File(offer.getFile().getAbsolutePath()));
-        userOffer.setFirstFive(true);
-        userOffer.setMyUser(myUser);
-
-        String expected = mapper.writeValueAsString(userOffer);
-        String actual = mapper.writeValueAsString(converted);
-        System.out.println(expected);
-        System.out.println(actual);
-        Assertions.assertTrue(expected.equals(actual));
-    }
 
     @SneakyThrows
     @Test

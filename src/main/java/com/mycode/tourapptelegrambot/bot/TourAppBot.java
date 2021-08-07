@@ -146,6 +146,7 @@ public class TourAppBot extends TelegramWebhookBot {
             execute(sendPhoto);
         }
 
+
     }
 
     public static void saveImage(String imageUrl, String destinationFile) throws IOException {

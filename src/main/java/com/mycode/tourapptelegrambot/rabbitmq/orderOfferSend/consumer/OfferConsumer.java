@@ -11,9 +11,11 @@ import com.mycode.tourapptelegrambot.repositories.BotMessageRepo;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
 import com.mycode.tourapptelegrambot.services.OfferService;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -49,6 +51,9 @@ public class OfferConsumer {
     @Value("${offer.count}")
     private int maxOfferCount;
 
+    @Value("${offer.path}")
+    private String offerPath;
+
     /** This method for getting agents offer
      * @implNote If offer count bigger than 5 sending load more button
      * @param offer agent's offer*/
@@ -63,18 +68,21 @@ public class OfferConsumer {
             System.out.println(count);
             count++;
             if (count == maxOfferCount) {
+                FileUtils.writeByteArrayToFile(ResourceUtils.getFile(offerPath),offer.getFile());
                 offerService.save(offer, user, false);
                 telegramBot.execute(SendMessage.builder().chatId(user.getChatId()).text("\u2B07\uFE0F")
                         .replyMarkup(getLoadButtons(orderCache.get(user.getId()), botMessageRepo)).build());
             } else if (count < maxOfferCount) {
+                FileUtils.writeByteArrayToFile(ResourceUtils.getFile(offerPath),offer.getFile());
                 SendPhoto sendPhoto = new SendPhoto();
-                sendPhoto.setPhoto(new InputFile().setMedia(offer.getFile()));
+                sendPhoto.setPhoto(new InputFile().setMedia(ResourceUtils.getFile(offerPath)));
                 sendPhoto.setChatId(user.getChatId());
                 sendPhoto.setReplyMarkup(getAcceptButtons(offer.getOfferId(), orderCache.get(user.getId()), botMessageRepo));
                 telegramBot.execute(sendPhoto);
                 offerService.save(offer, user, true);
                 offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());
             } else {
+                FileUtils.writeByteArrayToFile(ResourceUtils.getFile(offerPath),offer.getFile());
                 offerService.save(offer, user, false);
             }
             offerCache.save(OfferCount.builder().userId(user.getId()).count(count).build());

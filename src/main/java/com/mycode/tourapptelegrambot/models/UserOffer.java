@@ -1,5 +1,6 @@
 package com.mycode.tourapptelegrambot.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,6 +27,7 @@ public class UserOffer {
     Long id;
     String userId;
     Long offerId;
+    @JsonIgnore
     File file;
     @ManyToOne
     MyUser myUser;

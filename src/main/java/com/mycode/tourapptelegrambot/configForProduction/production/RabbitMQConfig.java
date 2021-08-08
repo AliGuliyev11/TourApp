@@ -1,4 +1,4 @@
-package com.mycode.tourapptelegrambot.config.prduct;
+package com.mycode.tourapptelegrambot.configForProduction.production;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

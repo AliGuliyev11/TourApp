@@ -1,7 +1,7 @@
 package com.mycode.tourapptelegrambot.rabbitmq.orderOfferSend.rabbitservice;
 
 import com.mycode.tourapptelegrambot.dto.ReplyToOffer;
-import com.mycode.tourapptelegrambot.config.prduct.RabbitMQConfig;
+import com.mycode.tourapptelegrambot.configForProduction.production.RabbitMQConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 

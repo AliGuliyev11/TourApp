@@ -134,7 +134,7 @@ public class UserRequestFiller implements InputMessageHandler {
      * @param botState    cached bot state
      * @param userId      current user id
      * @param chatId      private chat id
-     * @param messageId   current mesage id
+     * @param messageId   current message id
      * @param usersAnswer user answer to bot question
      * @param regex       question validation regex
      * @param userOrder   current cached user order

@@ -92,7 +92,7 @@ public class OfferConsumer {
         System.out.println(offer);
     }
 
-    /** This method for sendind warning message from agent
+    /** This method for sending warning message from agent
      * @implNote If user request expired sending warning message to user
      * @param warningDto agent's warning message*/
 

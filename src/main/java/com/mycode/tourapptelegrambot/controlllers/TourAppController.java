@@ -4,7 +4,6 @@ import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.repositories.UserRepo;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
@@ -26,6 +25,5 @@ public class TourAppController {
     @PostMapping
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return telegramBot.onWebhookUpdateReceived(update);
-//            return SendMessage.builder().chatId(String.valueOf(update.getMessage().getChatId())).text("Nurlan ...").build();
     }
 }

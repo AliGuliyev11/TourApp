@@ -2,12 +2,6 @@ package com.mycode.tourapptelegrambot.bot.botfacade;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibm.cloud.sdk.core.security.Authenticator;
-import com.ibm.cloud.sdk.core.security.IamAuthenticator;
-import com.ibm.watson.speech_to_text.v1.SpeechToText;
-import com.ibm.watson.speech_to_text.v1.model.RecognizeOptions;
-import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResult;
-import com.ibm.watson.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.mycode.tourapptelegrambot.bot.TourAppBot;
 import com.mycode.tourapptelegrambot.dto.BotStateSendMessage;
 import com.mycode.tourapptelegrambot.dto.QuestionAction.QAConverter;
@@ -31,7 +25,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -43,7 +36,6 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -191,52 +183,6 @@ public class TelegramFacade {
 
     private boolean checkIsCommand(String text) {
         return text.equals("/start") || text.equals("/stop") || text.equals("/continue");
-    }
-
-
-    @Value("${ibm.apiKey}")
-    String apiKey;
-    @Value("${ibm.serviceUrl}")
-    String serviceUrl;
-    @Value("${voice.path}")
-    String voiceFilePath;
-    @Value("${voice.error}")
-    String errorMessage;
-
-    /**
-     * Method for change @Voice to text
-     *
-     * @param chatId sending message to user
-     * @param voice  voice file which sended by user
-     * @return SendMessage
-     * @apiNote This API owns to IBM cloud
-     * Authenticator-API key
-     * setServiceUrl-API url
-     * for version 1.1
-     */
-
-    @SneakyThrows
-    private SendMessage speechToText(Voice voice, Long chatId) {
-        Authenticator authenticator = new IamAuthenticator(apiKey);
-        SpeechToText speechToText = new SpeechToText(authenticator);
-        speechToText.setServiceUrl(serviceUrl);
-
-        telegramBot.voice(voice);
-
-        RecognizeOptions recognizeOptions = new RecognizeOptions.Builder()
-                .audio(new FileInputStream(voiceFilePath))
-                .contentType(voice.getMimeType())
-                .build();
-
-        SpeechRecognitionResults speechRecognitionResults =
-                speechToText.recognize(recognizeOptions).execute().getResult();
-        if (speechRecognitionResults.getResults().isEmpty()) {
-            return SendMessage.builder().chatId(String.valueOf(chatId)).text(errorMessage).build();
-        } else {
-            List<SpeechRecognitionResult> resultsList = speechRecognitionResults.getResults().stream().filter(SpeechRecognitionResult::isXFinal).collect(Collectors.toList());
-            String a = resultsList.get(0).getAlternatives().get(0).getTranscript();
-            return SendMessage.builder().chatId(String.valueOf(chatId)).text(a).build();
-        }
     }
 
 
@@ -461,8 +407,6 @@ public class TelegramFacade {
             userRepo.save(MyUser.builder().id(userId).uuid(uuid).chatId(chatId).build());
             return sendMessage;
         }
-//        ClassLoader cl = this.getClass().getClassLoader();
-//        InputStream inputStream = cl.getResourceAsStream(noData);
         telegramBot.sendPhoto(chatId, "\uD83D\uDE34", noData);
         return SendMessage.builder().chatId(chatId).text("").build();
     }

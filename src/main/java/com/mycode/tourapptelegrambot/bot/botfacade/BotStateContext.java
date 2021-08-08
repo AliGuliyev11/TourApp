@@ -1,7 +1,6 @@
 package com.mycode.tourapptelegrambot.bot.botfacade;
 
 import com.mycode.tourapptelegrambot.enums.BotState;
-import com.mycode.tourapptelegrambot.enums.QuestionType;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -46,20 +45,6 @@ public class BotStateContext {
                 return false;
         }
     }
-
-    public static boolean isButtonType(QuestionType questionType) {
-        switch (questionType) {
-            case Button_Calendar:
-            case Button_Numeric:
-            case Button_Prediction:
-            case Button:
-            case Button_Free_Text:
-                return true;
-            default:
-                return false;
-        }
-    }
-
 
 }
 

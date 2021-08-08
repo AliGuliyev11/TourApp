@@ -14,13 +14,13 @@ public class Messages {
     public static String getBotMessage(String keyword, String language, BotMessageRepo botMessageRepo) {
         BotMessage botMessage = botMessageRepo.getBotMessageByKeyword(keyword);
         if (botMessage == null) {
-            return "\uD83D\uDE04";
+            return Emojis.Times.toString();
         } else {
             JSONObject message = new JSONObject(botMessage.getMessage());
             try {
                 return message.getString(language.toUpperCase());
             } catch (Exception e) {
-                return "\uD83D\uDE04";
+                return Emojis.Times.toString();
             }
         }
 

@@ -5,14 +5,10 @@ import com.mycode.tourapptelegrambot.bot.commands.ContinueCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StartCommand;
 import com.mycode.tourapptelegrambot.bot.commands.StopCommand;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
@@ -21,14 +17,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
-import javax.imageio.ImageIO;
 import java.io.*;
 import java.io.File;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Telegram bot class where Webhook extends and setted
@@ -70,25 +63,6 @@ public class TourAppBot extends TelegramWebhookBot {
 
     public void Execute(BotApiMethod<?> replyMessageToUser) throws TelegramApiException {
         execute(replyMessageToUser);
-    }
-
-    @Value("${voice.path}")
-    String path;
-
-    /**
-     * Speech to text
-     *
-     * @param voice user voice
-     * @apiNote this method for download user voice file
-     */
-
-    @SneakyThrows
-    public void voice(Voice voice) {
-        GetFile getFile = new GetFile();
-        getFile.setFileId(voice.getFileId());
-        String filePath = execute(getFile).getFilePath();
-        File file = downloadFile(filePath, new File(path));
-        System.out.println(file.getName());
     }
 
     @Override
@@ -149,6 +123,13 @@ public class TourAppBot extends TelegramWebhookBot {
 
     }
 
+    /**
+     * This method for save image to destination file
+     *
+     * @param imageUrl        imageUrl from URL address
+     * @param destinationFile where be added destination file
+     */
+
     public static void saveImage(String imageUrl, String destinationFile) throws IOException {
         try {
             URL url = new URL(imageUrl);
@@ -161,7 +142,7 @@ public class TourAppBot extends TelegramWebhookBot {
             }
             is.close();
             os.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
 
@@ -201,14 +182,4 @@ public class TourAppBot extends TelegramWebhookBot {
         execute(sendPhoto);
     }
 
-    @SneakyThrows
-    public void sendDocument(String chatId, String caption, File sendFile) {
-        SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(chatId);
-        sendDocument.setCaption(caption);
-        InputFile inputFile = new InputFile();
-        inputFile.setMedia(sendFile);
-        sendDocument.setDocument(inputFile);
-        execute(sendDocument);
-    }
 }
